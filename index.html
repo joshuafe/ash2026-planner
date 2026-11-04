@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ASH 2026 Planner</title>
 <style>
-:root{--bg:#f4f5f7;--panel:#fff;--ink:#1b1f24;--muted:#5d6670;--line:#e1e5ea;--accent:#8a1c1c;--accent2:#1f5f8b;--attend:#1e7d46;--maybe:#b7791f;--skip:#8d969e;--chip:#eef1f4;--hl:#fff3c4}
+:root{--bg:#f4f5f7;--panel:#fff;--ink:#1b1f24;--muted:#5d6670;--line:#e1e5ea;--accent:#8a1c1c;--accent2:#1f5f8b;--attend:#1e7d46;--maybe:#b7791f;--skip:#8d969e;--chip:#eef1f4;--hl:#fff3c4;--graph:#2b6cb0}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
@@ -14,6 +14,7 @@ header h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.2px}
 .tabs button{background:transparent;border:1px solid rgba(255,255,255,.55);color:#fff;padding:4px 12px;border-radius:999px;cursor:pointer;margin-right:4px;font-size:13px}
 .tabs button.active{background:#fff;color:var(--accent);font-weight:600}
 header .stats{margin-left:auto;font-size:12px;opacity:.92}
+header .who{font-size:12px;background:rgba(255,255,255,.15);border-radius:999px;padding:2px 10px;cursor:pointer}
 #app{display:grid;grid-template-columns:270px minmax(0,1fr) 460px;gap:10px;padding:10px;height:calc(100vh - 46px)}
 aside,main,#detail{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;min-height:0}
 aside{padding:12px}
@@ -26,13 +27,16 @@ h3.sec:first-child{margin-top:0}
 .chip.on{background:var(--accent2);color:#fff}
 .chip.small{font-size:11px;padding:1px 7px;cursor:default}
 .chip.term{background:var(--hl);border-color:#e8d58a;cursor:default}
+.chip.gterm{background:#e3eefb;border-color:#b9d2f0;cursor:default}
+.chip.shared{background:#f3e8ff;border-color:#d6bcfa;cursor:default}
+a.chip{text-decoration:none;color:inherit;cursor:pointer}
 input[type=text],input[type=search],input[type=number],textarea,select{font:inherit;border:1px solid var(--line);border-radius:6px;padding:5px 7px;width:100%;background:#fff;color:var(--ink)}
 textarea{resize:vertical}
 label.row{display:flex;align-items:center;gap:6px;font-size:13px;margin:3px 0;cursor:pointer}
 button.btn{font:inherit;border:1px solid var(--line);background:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px}
 button.btn.primary{background:var(--accent2);border-color:var(--accent2);color:#fff}
 button.btn.danger{color:var(--accent)}
-button.btn:disabled{opacity:.5;cursor:default}
+button.btn.tiny{padding:1px 7px;font-size:11px}
 .toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:2}
 .toolbar .count{color:var(--muted);font-size:12px;margin-left:auto}
 .row-item{display:grid;grid-template-columns:54px 1fr auto;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;align-items:start}
@@ -43,8 +47,9 @@ button.btn:disabled{opacity:.5;cursor:default}
 .row-item.skip{opacity:.5;border-left:4px solid var(--skip)}
 .score{font-weight:700;font-size:15px;text-align:right;line-height:1.1}
 .score small{display:block;font-weight:400;color:var(--muted);font-size:10px}
-.bar{height:4px;background:#e9ecef;border-radius:2px;margin-top:4px;overflow:hidden}
+.bar{height:4px;background:#e9ecef;border-radius:2px;margin-top:4px;overflow:hidden;display:flex}
 .bar i{display:block;height:100%;background:var(--accent2)}
+.bar b{display:block;height:100%;background:#90b4e0}
 .title{font-weight:600;line-height:1.3}
 .meta{color:var(--muted);font-size:12px;margin-top:2px}
 .type{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:4px;background:var(--chip);color:var(--muted);margin-right:6px;vertical-align:middle}
@@ -66,6 +71,7 @@ button.btn:disabled{opacity:.5;cursor:default}
 .why{font-size:12.5px;margin:4px 0}
 .why b{font-weight:600}
 .empty{padding:40px;text-align:center;color:var(--muted)}
+.banner{grid-column:1 / -1;background:#f3e8ff;border:1px solid #d6bcfa;border-radius:10px;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px}
 /* profile */
 .topic{border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:8px;background:#fcfcfd}
 .topic .head{display:flex;gap:6px;align-items:center;margin-bottom:5px}
@@ -73,6 +79,7 @@ button.btn:disabled{opacity:.5;cursor:default}
 .topic .head select{width:70px}
 .topic textarea{font-size:12.5px;min-height:46px}
 .pw{display:grid;grid-template-columns:1fr 70px;gap:4px 8px;align-items:center;font-size:12.5px}
+.slider{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0}
 /* calendar */
 #cal{display:none;grid-column:1 / -1;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;padding:12px}
 .cal-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
@@ -92,8 +99,19 @@ button.btn:disabled{opacity:.5;cursor:default}
 .plist li{font-size:13px;margin:2px 0}
 .legend{font-size:12px;color:var(--muted)}
 .conflicts{background:#fdecec;border:1px solid #f3b9b9;border-radius:8px;padding:8px 12px;margin:8px 0;font-size:13px}
+/* keyword web */
+#web{display:none;grid-column:1 / -1;grid-template-columns:300px minmax(0,1fr) 360px;gap:10px;min-height:0}
+#web.on{display:grid}
+#web > div{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;min-height:0;padding:12px}
+#webmain{padding:0 !important;position:relative;overflow:hidden !important}
+#webcanvas{width:100%;height:100%;display:block;cursor:grab}
+.kw{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:4px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+.kw .w{color:var(--muted);font-size:11px;white-space:nowrap}
+.kw.seed{background:#fffbea}
+.kw.muted{opacity:.45}
+.kw a{color:var(--ink);text-decoration:none;font-weight:500}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;display:none;z-index:9}
-@media (max-width:1100px){#app{grid-template-columns:240px 1fr;height:auto}#detail{grid-column:1 / -1;max-height:70vh}}
+@media (max-width:1100px){#app{grid-template-columns:240px 1fr;height:auto}#detail{grid-column:1 / -1;max-height:70vh}#web.on{grid-template-columns:1fr}#webmain{height:60vh}}
 @media (max-width:760px){#app{grid-template-columns:1fr}aside{max-height:40vh}}
 mark{background:var(--hl);padding:0 1px}
 </style>
@@ -104,19 +122,24 @@ mark{background:var(--hl);padding:0 1px}
   <div class="tabs">
     <button data-tab="rank" class="active">Rank &amp; review</button>
     <button data-tab="cal">My calendar</button>
+    <button data-tab="web">Keyword web</button>
     <button data-tab="profile">Interests</button>
   </div>
+  <span class="who" id="who" title="Click to set your name">You</span>
   <div class="stats" id="stats"></div>
 </header>
 <div id="app">
+  <div class="banner" id="banner" style="display:none"></div>
   <aside id="side"></aside>
   <main id="main"></main>
   <section id="detail"><div class="empty">Select an item to see details.</div></section>
   <section id="cal"></section>
+  <section id="web"></section>
 </div>
 <div id="toast"></div>
 <script src="data/core.js"></script>
 <script src="data/abstracts.js"></script>
+<script src="data/graph.js"></script>
 <script>
 'use strict';
 // ---------- default interest profile (edit in the Interests tab) ----------
@@ -133,15 +156,18 @@ const DEFAULT_PROFILE = {
   people: [],
   institutions: ['Weill Cornell'],
   negatives: [],
-  programWeights: {'Education Program':1.3,'Scientific Program':1.3,'Scientific Symposia':1.3,'Scientific Workshops':1.1,'Special-Interest Sessions':1.1,'Marquee Sessions':1.2,'How I Treat':1.2,'Meet the Scientist':1.1,'Education Spotlight Sessions':1.1,'Scientific Spotlight Sessions':1.1,'Oral Abstract Session':1.0,'Poster Abstract Session':0.7,'Clinical Trial Showcases':0.8,'Friday Satellite Symposia':0.6,'Satellite Symposia':0.6,'Trainee Activities and Services':0.5,'Events':0.3,'ASH-Sponsored Events':0.4,'Product Theaters':0.3,'Industry Theaters':0.3,'Industry Forums':0.3,'Company Showcases':0.3,'ASH Poster Walks':0.9,'Blood Journals Studio':0.5,'ASH Wellness Studio':0.2,'MedEd Talks':0.6,'Treating Fairly Talks':0.6}
+  programWeights: {'Education Program':1.3,'Scientific Program':1.3,'Scientific Symposia':1.3,'Scientific Workshops':1.1,'Special-Interest Sessions':1.1,'Special-Interest Sessions and Studios':1.1,'Marquee Sessions':1.2,'Marquee Sessions and Lectures':1.2,'How I Treat':1.2,'Meet the Scientist':1.1,'Education Spotlight Sessions':1.1,'Scientific Spotlight Sessions':1.1,'Oral Abstract Session':1.0,'Poster Abstract Session':0.7,'Clinical Trial Showcases':0.8,'Friday Satellite Symposia':0.6,'Satellite Symposia':0.6,'Trainee Activities and Services':0.5,'Events':0.3,'ASH-Sponsored Events':0.4,'Product Theaters':0.3,'Industry Theaters':0.3,'Industry Forums':0.3,'Company Showcases':0.3,'ASH Poster Walks':0.9,'Blood Journals Studio':0.5,'ASH Wellness Studio':0.2,'MedEd Talks':0.6,'Treating Fairly Talks':0.6},
+  graph: {strength:1.0, alpha:0.35, hops:2, muted:[]}
 };
 // ---------- data ----------
 const DATA = window.ASH_DATA || {meta:{}, items:[]};
 const ABS = window.ASH_ABSTRACTS || {};
+const G = window.ASH_GRAPH || null;
 const items = DATA.items;
 const byId = new Map(items.map(i => [i.id, i]));
 const DAYNAMES = {'2026-12-09':'Wed 9','2026-12-10':'Thu 10','2026-12-11':'Fri 11','2026-12-12':'Sat 12','2026-12-13':'Sun 13','2026-12-14':'Mon 14','2026-12-15':'Tue 15','2026-12-16':'Wed 16','2026-12-17':'Thu 17','2026-12-18':'Fri 18'};
 function stripDisclosures(s){ if(!s) return ''; const out=[]; const L=s.split('\n'); for(let i=0;i<L.length;i++){ const l=L[i].trim(); if(/^Disclosures?:/i.test(l)){ i++; continue; } if(/^No relevant conflicts/i.test(l)) continue; if(/ - (Honoraria|Research Funding|Consultancy|Membership on a Board|Current Employment|Speakers Bureau|Current equity|Patents|Other|Stock)/.test(l)) continue; out.push(L[i]); } return out.join('\n'); }
+function toMin(hm){ const [h,m]=hm.split(':').map(Number); return h*60+m; }
 for (const it of items) {
   const a = ABS[it.id] || {};
   it.abstract = a.abstract || ''; it.description = a.description || ''; it.ep_description = a.ep_description || '';
@@ -154,21 +180,37 @@ for (const it of items) {
   it._aff = Object.values(it.affiliations).join(' | ');
   it._blob = (it._title + ' ' + it._kw + ' ' + it._sess + ' ' + it._people + ' ' + it._aff + ' ' + it._abs + ' ' + it._desc + ' ' + (it.number||'') + ' ' + (it.location||'')).toLowerCase();
   it._min = it.start ? toMin(it.start) : null; it._max = it.end ? toMin(it.end) : null;
+  const gt = G && G.items[it.id]; it._gt = gt ? gt[0] : []; it._gb = gt ? gt[1] : [];
 }
-function toMin(hm){ const [h,m]=hm.split(':').map(Number); return h*60+m; }
 const programs = [...new Set(items.map(i=>i.program).filter(Boolean))].sort();
 const days = [...new Set(items.map(i=>i.date).filter(Boolean))].sort();
+// keyword-web index
+const GN = G ? G.terms.length : 0;
+const gLabel = G ? G.terms.map(t => t.label) : [];
+const normKey = s => String(s||'').toLowerCase().replace(/[\s\-\u2010-\u2015_]+/g, '');
+const gIndex = new Map();
+if (G) G.terms.forEach(t => { const k = normKey(t.label); if (!gIndex.has(k)) gIndex.set(k, t.id); });
+const gNb = G ? Array.from({length: GN}, () => []) : [];
+if (G) for (const [a, b, w] of G.edges){ gNb[a].push([b, w]); gNb[b].push([a, w]); }
+// broad keywords (tagged on hundreds of items) count less than specific ones
+const gIdf = G ? Float32Array.from(G.terms, t => Math.max(0.2, Math.min(1, Math.log(G.n_items / Math.max(1, t.df)) / Math.log(G.n_items / 100)))) : null;
+const G_FLOOR = 0.25;  // propagated weights below this are noise
 // ---------- state ----------
 const store = {
   get(k, d){ try { const v = localStorage.getItem('ash26.'+k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
   set(k, v){ try { localStorage.setItem('ash26.'+k, JSON.stringify(v)); } catch(e){} }
 };
 let profile = store.get('profile', null) || JSON.parse(JSON.stringify(DEFAULT_PROFILE));
+if (!profile.graph) profile.graph = JSON.parse(JSON.stringify(DEFAULT_PROFILE.graph));
 let decisions = store.get('decisions', {});
 let notes = store.get('notes', {});
-const F = Object.assign({day:'all', programs:[], types:{session:true, abstract:true, talk:true}, q:'', minScore:0, decision:'all', sort:'score', hidePosters:false, limit:150}, store.get('filters', {}));
-F.limit = 150;
+let me = store.get('me', '');
+const F = Object.assign({day:'all', programs:[], types:{session:true, abstract:true, talk:true}, q:'', minScore:0, decision:'all', sort:'score', hidePosters:false, sharedOnly:false, limit:150}, store.get('filters', {}));
+F.limit = 150; F.sharedOnly = false;
 let selected = null, tab = 'rank', maxScore = 1;
+let shared = null;       // {name, attend:Set, maybe:Set, profile}
+let gWeight = null;      // propagated keyword weights (Float32Array over graph terms)
+let gSeeds = new Map();  // term id -> seed weight
 // ---------- scoring ----------
 function termRe(term){
   const t = (term||'').trim(); if(!t) return null;
@@ -185,6 +227,45 @@ function compile(p){
     people: mk(p.people), institutions: mk(p.institutions), negatives: mk(p.negatives), programWeights: p.programWeights||{}
   };
 }
+function computeGraphWeights(){
+  gSeeds = new Map(); gWeight = null;
+  if (!G) return;
+  const g = profile.graph || DEFAULT_PROFILE.graph;
+  const muted = new Set((g.muted||[]).map(m => gIndex.get(normKey(m))).filter(x => x != null));
+  for (const t of (profile.topics||[])){
+    if (t.enabled === false) continue;
+    for (const term of t.terms||[]){
+      const id = gIndex.get(normKey(term));
+      if (id != null && !muted.has(id) && G.terms[id].df <= 0.08 * G.n_items) gSeeds.set(id, Math.max(gSeeds.get(id)||0, +t.weight||1));   // skip tags applied to >8% of items
+    }
+  }
+  const w = new Float32Array(GN); for (const [id, s] of gSeeds) w[id] = s;
+  const alpha = +g.alpha || 0, hops = Math.max(0, Math.min(3, +g.hops || 0));
+  let cur = w;
+  for (let h = 0; h < hops; h++){
+    const nxt = new Float32Array(cur);
+    for (let v = 0; v < GN; v++){
+      if (muted.has(v)) { nxt[v] = 0; continue; }
+      let acc = 0;
+      for (const [u, ew] of gNb[v]) if (cur[u] > 0) acc += cur[u] * ew;
+      if (acc > 0){ const seed = gSeeds.get(v) || 0; nxt[v] = Math.max(seed, Math.min(5, seed + alpha * acc)); }
+    }
+    cur = nxt;
+  }
+  for (const m of muted) cur[m] = 0;
+  gWeight = cur;
+}
+function graphScore(it){
+  if (!gWeight) return [0, []];
+  const strength = +(profile.graph && profile.graph.strength) || 0;
+  if (!strength) return [0, []];
+  let s = 0; const hits = [];
+  for (const t of it._gt){ const w = gWeight[t]; if (w >= G_FLOOR){ const v = 2*w*gIdf[t]; s += v; hits.push([t, v]); } }
+  for (const t of it._gb){ const w = gWeight[t]; if (w >= G_FLOOR){ const v = w*gIdf[t]; s += v; hits.push([t, v]); } }
+  const val = strength * 6 * Math.log1p(s / 4);   // diminishing returns so long abstracts do not dominate
+  hits.sort((a,b)=>b[1]-a[1]);
+  return [val, hits.slice(0, 8)];
+}
 function scoreItem(it, P){
   let total = 0; const why = [];
   for (const t of P.topics){
@@ -196,6 +277,9 @@ function scoreItem(it, P){
     }
     if (ts > 0){ const c = t.weight * Math.min(ts, 8); total += c; why.push({topic:t.name, terms:matched, points:c}); }
   }
+  const [gs, ghits] = graphScore(it);
+  it._gscore = gs; it._ghits = ghits;
+  total += gs;
   const pw = P.programWeights[it.program] ?? 1; total *= pw;
   let bonus = 0; const hits = [];
   for (const {term, re} of P.people) if (count(re, it._people)) { bonus += 8; hits.push('Person: ' + term); }
@@ -204,6 +288,7 @@ function scoreItem(it, P){
   it._own = total + bonus; it._why = why; it._hits = hits; it._pw = pw;
 }
 function scoreAll(){
+  computeGraphWeights();
   const P = compile(profile);
   for (const it of items) scoreItem(it, P);
   maxScore = 1;
@@ -221,9 +306,10 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const fmtTime = hm => { if(!hm) return ''; let [h,m] = hm.split(':').map(Number); const ap = h>=12?'pm':'am'; h = h%12 || 12; return `${h}:${String(m).padStart(2,'0')}${ap}`; };
 const fmtDay = d => DAYNAMES[d] || d || '';
 const isPoster = it => /poster/i.test(it.program||'') || /poster/i.test(it.ep_category||'');
-function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display='block'; clearTimeout(toast._t); toast._t = setTimeout(()=>t.style.display='none', 2200); }
+function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display='block'; clearTimeout(toast._t); toast._t = setTimeout(()=>t.style.display='none', 2400); }
 function download(name, text, type='text/plain'){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000); }
 function setDecision(id, d){ if (decisions[id] === d) delete decisions[id]; else decisions[id] = d; store.set('decisions', decisions); renderList(); renderStats(); if (selected === id) renderDetail(); if (tab==='cal') renderCal(); }
+function rescore(msg){ store.set('profile', profile); scoreAll(); renderList(); renderStats(); if (tab==='web') renderWeb(); if (tab==='profile') renderProfile(); if (msg) toast(msg); }
 // ---------- filters / list ----------
 function visible(){
   const q = F.q.trim().toLowerCase();
@@ -234,6 +320,7 @@ function visible(){
     if (progSet.size && !progSet.has(it.program)) return false;
     if (F.hidePosters && isPoster(it)) return false;
     if (it._score < F.minScore) return false;
+    if (F.sharedOnly && shared && !(shared.attend.has(it.id) || shared.maybe.has(it.id))) return false;
     const d = decisions[it.id];
     if (F.decision === 'undecided' && d) return false;
     if (F.decision === 'chosen' && !(d === 'attend' || d === 'maybe')) return false;
@@ -259,25 +346,28 @@ function renderSide(){
     <label class="row"><input type="checkbox" data-type="abstract" ${F.types.abstract?'checked':''}> Abstracts (${DATA.meta.by_type?.abstract ?? ''})</label>
     <label class="row"><input type="checkbox" data-type="talk" ${F.types.talk?'checked':''}> Talks within sessions (${DATA.meta.by_type?.talk ?? ''})</label>
     <label class="row"><input type="checkbox" id="hidePosters" ${F.hidePosters?'checked':''}> Hide posters</label>
+    ${shared ? `<label class="row"><input type="checkbox" id="sharedOnly" ${F.sharedOnly?'checked':''}> Only ${esc(shared.name)}'s picks</label>` : ''}
     <h3 class="sec">Decision</h3>
     <select id="decision">${['all','undecided','chosen','attend','maybe','skip'].map(v=>`<option value="${v}" ${F.decision===v?'selected':''}>${v==='all'?'All items':v==='chosen'?'Attend + maybe':v[0].toUpperCase()+v.slice(1)}</option>`).join('')}</select>
     <h3 class="sec">Minimum score <span id="minScoreVal" style="float:right;color:var(--muted)">${F.minScore}</span></h3>
     <input type="range" id="minScore" min="0" max="60" step="1" value="${F.minScore}" style="width:100%">
     <h3 class="sec">Program <span style="float:right;font-weight:400;text-transform:none;letter-spacing:0"><a href="#" id="progAll">all</a> · <a href="#" id="progNone">none</a></span></h3>
     <div class="chips" id="progchips">${programs.map(p=>`<span class="chip ${(!F.programs.length||F.programs.includes(p))?'on':''}" data-prog="${esc(p)}">${esc(p)}</span>`).join('')}</div>
-    <h3 class="sec">Export</h3>
+    <h3 class="sec">Export &amp; share</h3>
     <div class="chips">
       <button class="btn" id="exportIcs">Calendar (.ics)</button>
       <button class="btn" id="exportCsv">Chosen (.csv)</button>
+      <button class="btn" id="shareLink">Share link</button>
       <button class="btn" id="exportJson">Backup (.json)</button>
       <button class="btn" id="importJson">Restore</button>
     </div>
     <input type="file" id="importFile" accept="application/json" style="display:none">
-    <p class="legend" style="margin-top:10px">Scores are relative and based on your interest profile. Decisions and notes are saved in this browser.</p>`;
+    <p class="legend" style="margin-top:10px">Scores are relative to your interest profile. Decisions, notes and your profile are saved in this browser only, so anyone you send the app to keeps their own. Use Backup/Restore to move yours between devices, or Share link to show your picks to someone.</p>`;
   s.querySelector('#q').addEventListener('input', e => { F.q = e.target.value; F.limit = 150; saveF(); renderList(); });
   s.querySelector('#daychips').addEventListener('click', e => { const c = e.target.closest('.chip'); if(!c) return; F.day = c.dataset.day; saveF(); renderSide(); renderList(); });
   s.querySelectorAll('input[data-type]').forEach(cb => cb.addEventListener('change', e => { F.types[e.target.dataset.type] = e.target.checked; saveF(); renderList(); }));
   s.querySelector('#hidePosters').addEventListener('change', e => { F.hidePosters = e.target.checked; saveF(); renderList(); });
+  const so = s.querySelector('#sharedOnly'); if (so) so.addEventListener('change', e => { F.sharedOnly = e.target.checked; renderList(); });
   s.querySelector('#decision').addEventListener('change', e => { F.decision = e.target.value; saveF(); renderList(); });
   s.querySelector('#minScore').addEventListener('input', e => { F.minScore = +e.target.value; s.querySelector('#minScoreVal').textContent = F.minScore; saveF(); renderList(); });
   s.querySelector('#progchips').addEventListener('click', e => { const c = e.target.closest('.chip'); if(!c) return; const p = c.dataset.prog; let set = F.programs.length ? new Set(F.programs) : new Set(programs); if (set.has(p)) set.delete(p); else set.add(p); F.programs = set.size === programs.length ? [] : [...set]; saveF(); renderSide(); renderList(); });
@@ -285,23 +375,28 @@ function renderSide(){
   s.querySelector('#progNone').addEventListener('click', e => { e.preventDefault(); F.programs = ['__none__']; saveF(); renderSide(); renderList(); });
   s.querySelector('#exportIcs').addEventListener('click', () => exportIcs(true));
   s.querySelector('#exportCsv').addEventListener('click', exportCsv);
-  s.querySelector('#exportJson').addEventListener('click', () => download('ash2026-planner-backup.json', JSON.stringify({profile, decisions, notes, exported:new Date().toISOString()}, null, 1), 'application/json'));
+  s.querySelector('#shareLink').addEventListener('click', makeShareLink);
+  s.querySelector('#exportJson').addEventListener('click', () => download('ash2026-planner-backup.json', JSON.stringify({profile, decisions, notes, me, exported:new Date().toISOString()}, null, 1), 'application/json'));
   s.querySelector('#importJson').addEventListener('click', () => s.querySelector('#importFile').click());
-  s.querySelector('#importFile').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; f.text().then(t => { try { const j = JSON.parse(t); if (j.profile) profile = j.profile; if (j.decisions) decisions = j.decisions; if (j.notes) notes = j.notes; store.set('profile', profile); store.set('decisions', decisions); store.set('notes', notes); scoreAll(); renderAll(); toast('Restored'); } catch(err){ toast('Could not read file'); } }); });
+  s.querySelector('#importFile').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; f.text().then(t => { try { const j = JSON.parse(t); if (j.profile) profile = j.profile; if (!profile.graph) profile.graph = JSON.parse(JSON.stringify(DEFAULT_PROFILE.graph)); if (j.decisions) decisions = j.decisions; if (j.notes) notes = j.notes; if (j.me) { me = j.me; store.set('me', me); } store.set('profile', profile); store.set('decisions', decisions); store.set('notes', notes); scoreAll(); renderAll(); toast('Restored'); } catch(err){ toast('Could not read file'); } }); });
 }
-function saveF(){ const {limit, ...rest} = F; store.set('filters', rest); }
+function saveF(){ const {limit, sharedOnly, ...rest} = F; store.set('filters', rest); }
 function rowHtml(it){
   const d = decisions[it.id] || '';
-  const seen = new Set(); const terms = it._why.flatMap(w => w.terms).filter(t => { const k = t.toLowerCase().replace(/[\s\-]+/g,''); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
+  const seen = new Set();
+  const terms = it._why.flatMap(w => w.terms).filter(t => { const k = normKey(t); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
+  const gterms = (it._ghits||[]).filter(([t]) => !seen.has(normKey(gLabel[t])) && !gSeeds.has(t)).slice(0, 3).map(([t]) => gLabel[t]);
   const sub = it.type !== 'session' && it.session_title ? `<div class="meta">in: ${esc(it.session_title)}</div>` : '';
   const who = it.presenters && it.presenters.length ? `<div class="meta">${esc(it.presenters.slice(0,4).join(', '))}${it.presenters.length>4?` +${it.presenters.length-4}`:''}</div>` : '';
+  const sh = shared && (shared.attend.has(it.id) ? `<span class="chip small shared">★ ${esc(shared.name)}</span>` : shared.maybe.has(it.id) ? `<span class="chip small shared">? ${esc(shared.name)}</span>` : '');
+  const gpart = it._score > 0 ? Math.min(100, 100*(it._gscore*it._pw)/maxScore) : 0;
   return `<div class="row-item ${d} ${selected===it.id?'sel':''}" data-id="${it.id}">
-    <div><div class="score">${it._score.toFixed(0)}<small>${it._childBoost?'incl. talks':''}</small></div><div class="bar"><i style="width:${Math.min(100, 100*it._score/maxScore).toFixed(0)}%"></i></div></div>
+    <div><div class="score">${it._score.toFixed(0)}<small>${it._childBoost?'incl. talks':''}</small></div><div class="bar"><i style="width:${Math.max(0, Math.min(100, 100*it._score/maxScore) - gpart).toFixed(0)}%"></i><b style="width:${gpart.toFixed(0)}%"></b></div></div>
     <div>
       <div class="title"><span class="type ${it.type}">${it.type==='abstract'?(it.number?'#'+esc(it.number):'abstract'):it.type}</span>${esc(it.title)}${it.cme?'<span class="cme">CME</span>':''}</div>
       <div class="meta">${esc(fmtDay(it.date))} · ${esc(fmtTime(it.start))}–${esc(fmtTime(it.end))} · ${esc(it.location||'')} · ${esc(it.program||'')}</div>
       ${sub}${who}
-      ${terms.length ? `<div class="chips" style="margin-top:4px">${terms.map(t=>`<span class="chip small term">${esc(t)}</span>`).join('')}${it._hits.map(h=>`<span class="chip small">${esc(h)}</span>`).join('')}</div>` : ''}
+      ${(terms.length || gterms.length || sh) ? `<div class="chips" style="margin-top:4px">${terms.map(t=>`<span class="chip small term">${esc(t)}</span>`).join('')}${gterms.map(t=>`<span class="chip small gterm" title="related keyword from the web">${esc(t)}</span>`).join('')}${it._hits.map(h=>`<span class="chip small">${esc(h)}</span>`).join('')}${sh||''}</div>` : ''}
     </div>
     <div class="decide" data-id="${it.id}">
       <button class="attend ${d==='attend'?'on':''}" data-d="attend" title="Attend">★</button>
@@ -347,7 +442,10 @@ function renderDetail(){
   const authors = (it.authors||[]).map(a => `${a.presenting?'<b>':''}${esc(a.name)}${a.presenting?'</b>':''}${a.affil?.length?`<sup>${esc(a.affil.join(','))}</sup>`:''}`).join(', ');
   const affs = Object.entries(it.affiliations||{}).map(([k,v]) => `<div><sup>${esc(k)}</sup> ${esc(v)}</div>`).join('');
   const parts = (it.participants||[]).map(p => `<div><b>${esc(p.role)}:</b> ${esc(p.name)}</div>`).join('');
-  const why = it._why.map(w => `<div class="why"><b>${esc(w.topic)}</b> +${w.points.toFixed(1)} — ${esc(w.terms.join(', '))}</div>`).join('') + it._hits.map(h=>`<div class="why">${esc(h)}</div>`).join('') + (it._pw !== 1 ? `<div class="why">Program weight ×${it._pw}</div>` : '') + (it._childBoost ? `<div class="why">Talks in this session +${it._childBoost.toFixed(1)}</div>` : '');
+  const why = it._why.map(w => `<div class="why"><b>${esc(w.topic)}</b> +${w.points.toFixed(1)} — ${esc(w.terms.join(', '))}</div>`).join('')
+    + (it._gscore ? `<div class="why"><b>Keyword web</b> +${it._gscore.toFixed(1)} — ${esc((it._ghits||[]).map(([t,w]) => gLabel[t] + (gSeeds.has(t)?'':'*')).join(', '))} <span class="legend">(* related keyword)</span></div>` : '')
+    + it._hits.map(h=>`<div class="why">${esc(h)}</div>`).join('') + (it._pw !== 1 ? `<div class="why">Program weight ×${it._pw}</div>` : '') + (it._childBoost ? `<div class="why">Talks in this session +${it._childBoost.toFixed(1)}</div>` : '');
+  const sh = shared && (shared.attend.has(it.id) ? `<div class="why"><span class="chip small shared">★ ${esc(shared.name)} plans to attend</span></div>` : shared.maybe.has(it.id) ? `<div class="why"><span class="chip small shared">? ${esc(shared.name)}: maybe</span></div>` : '');
   el.innerHTML = `
     <div class="decide" data-id="${it.id}" style="float:right">
       <button class="attend ${d==='attend'?'on':''}" data-d="attend" title="Attend">★</button>
@@ -356,6 +454,7 @@ function renderDetail(){
     </div>
     <div><span class="type ${it.type}">${it.type}</span>${it.number?`<span class="type">#${esc(it.number)}</span>`:''}${it.cme?'<span class="cme">CME</span>':''}</div>
     <h2>${highlight(it.title)}</h2>
+    ${sh||''}
     <div class="kv">
       <b>When</b><div>${esc(fmtDay(it.date))} (${esc(it.date||'')}) · ${esc(fmtTime(it.start))}–${esc(fmtTime(it.end))} Central</div>
       <b>Where</b><div>${esc(it.location||'—')}</div>
@@ -385,12 +484,17 @@ document.getElementById('detail').addEventListener('click', e => {
 // ---------- profile editor ----------
 function renderProfile(){
   const el = document.getElementById('detail');
-  const t = profile;
+  const t = profile; const g = t.graph || DEFAULT_PROFILE.graph;
   el.innerHTML = `
     <h2 style="margin-top:0">Interest profile</h2>
-    <p class="legend">Each topic is a list of terms (one per line or comma-separated). A term scores when it appears in a title (3), keywords (2), session title (1.5), abstract (1–2) or description (1), summed per topic and multiplied by the topic weight. Program weights scale the total. People and institutions add a bonus; excluded terms subtract.</p>
+    <p class="legend">Each topic is a list of terms (one per line or comma-separated). A term scores when it appears in a title (3), keywords (2), session title (1.5), abstract (1–2) or description (1), summed per topic and multiplied by the topic weight. The keyword web adds points for related keywords that co-occur with yours. Program weights scale the total; people and institutions add a bonus; excluded terms subtract.</p>
     <div id="topics">${t.topics.map((tp,i)=>topicHtml(tp,i)).join('')}</div>
     <button class="btn" id="addTopic">+ Add topic</button>
+    <h3 class="sec">Keyword web</h3>
+    <div class="slider"><span>Influence on scores (0 = off)</span><input type="number" id="gStrength" step="0.1" min="0" max="3" value="${g.strength ?? 1}"></div>
+    <div class="slider"><span>Spread to neighbours (α)</span><input type="number" id="gAlpha" step="0.05" min="0" max="1" value="${g.alpha ?? 0.35}"></div>
+    <div class="slider"><span>Hops</span><input type="number" id="gHops" step="1" min="0" max="3" value="${g.hops ?? 2}"></div>
+    <div class="legend">Muted keywords: ${(g.muted||[]).map(m=>esc(m)).join(', ') || 'none'} (manage them in the Keyword web tab)</div>
     <h3 class="sec">People to follow (one per line)</h3><textarea id="people" rows="3">${esc((t.people||[]).join('\n'))}</textarea>
     <h3 class="sec">Institutions (matched in affiliations)</h3><textarea id="insts" rows="2">${esc((t.institutions||[]).join('\n'))}</textarea>
     <h3 class="sec">Exclude terms (penalize)</h3><textarea id="negs" rows="2">${esc((t.negatives||[]).join('\n'))}</textarea>
@@ -403,9 +507,9 @@ function renderProfile(){
     </div>`;
   el.querySelector('#addTopic').addEventListener('click', () => { readProfileForm(); profile.topics.push({name:'New topic', weight:3, terms:[]}); renderProfile(); });
   el.querySelector('#topics').addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (b){ readProfileForm(); profile.topics.splice(+b.dataset.del, 1); renderProfile(); } });
-  el.querySelector('#apply').addEventListener('click', () => { readProfileForm(); store.set('profile', profile); scoreAll(); renderList(); renderStats(); toast('Rescored'); });
+  el.querySelector('#apply').addEventListener('click', () => { readProfileForm(); rescore('Rescored'); });
   el.querySelector('#exportProfile').addEventListener('click', () => { readProfileForm(); download('ash2026-interests.json', JSON.stringify(profile, null, 1), 'application/json'); });
-  el.querySelector('#resetProfile').addEventListener('click', () => { if (!confirm('Replace your interest profile with the defaults?')) return; profile = JSON.parse(JSON.stringify(DEFAULT_PROFILE)); store.set('profile', profile); scoreAll(); renderProfile(); renderList(); renderStats(); });
+  el.querySelector('#resetProfile').addEventListener('click', () => { if (!confirm('Replace your interest profile with the defaults?')) return; profile = JSON.parse(JSON.stringify(DEFAULT_PROFILE)); rescore(); });
 }
 function topicHtml(tp, i){
   return `<div class="topic" data-i="${i}">
@@ -414,13 +518,132 @@ function topicHtml(tp, i){
 }
 function readProfileForm(){
   const el = document.getElementById('detail');
+  if (!el.querySelector('#topics')) return;
   const topics = [...el.querySelectorAll('.topic')].map(t => ({
     name: t.querySelector('[data-name]').value.trim() || 'Topic', weight: +t.querySelector('[data-w]').value, enabled: t.querySelector('[data-en]').checked,
     terms: t.querySelector('[data-terms]').value.split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean)
   }));
   const lines = id => el.querySelector(id).value.split(/\n+/).map(s=>s.trim()).filter(Boolean);
   const pw = {}; el.querySelectorAll('[data-pw]').forEach(i => { pw[i.dataset.pw] = +i.value; });
-  profile = {topics, people: lines('#people'), institutions: lines('#insts'), negatives: lines('#negs'), programWeights: pw};
+  const g = Object.assign({}, profile.graph || DEFAULT_PROFILE.graph, {strength: +el.querySelector('#gStrength').value, alpha: +el.querySelector('#gAlpha').value, hops: +el.querySelector('#gHops').value});
+  profile = {topics, people: lines('#people'), institutions: lines('#insts'), negatives: lines('#negs'), programWeights: pw, graph: g};
+}
+// ---------- keyword web ----------
+let webSel = null, webNodes = [], webEdges = [], webAnim = null, webQuery = '';
+function addTermToInterests(label){
+  let t = profile.topics.find(x => x.name === 'From keyword web');
+  if (!t){ t = {name:'From keyword web', weight:3, terms:[]}; profile.topics.push(t); }
+  if (!t.terms.some(x => normKey(x) === normKey(label))) t.terms.push(label);
+  profile.graph.muted = (profile.graph.muted||[]).filter(m => normKey(m) !== normKey(label));
+  rescore(`Added "${label}" to interests`);
+}
+function removeTermFromInterests(label){
+  for (const t of profile.topics) t.terms = t.terms.filter(x => normKey(x) !== normKey(label));
+  profile.topics = profile.topics.filter(t => t.name !== 'From keyword web' || t.terms.length);
+  rescore(`Removed "${label}"`);
+}
+function muteTerm(label){ profile.graph.muted = profile.graph.muted || []; if (!profile.graph.muted.some(m => normKey(m) === normKey(label))) profile.graph.muted.push(label); for (const t of profile.topics) t.terms = t.terms.filter(x => normKey(x) !== normKey(label)); rescore(`Muted "${label}"`); }
+function unmuteTerm(label){ profile.graph.muted = (profile.graph.muted||[]).filter(m => normKey(m) !== normKey(label)); rescore(`Unmuted "${label}"`); }
+function itemsWithTerm(t, n){ return items.filter(it => it._gt.includes(t) || it._gb.includes(t)).sort((a,b)=>b._score-a._score).slice(0, n); }
+function renderWeb(){
+  const el = document.getElementById('web');
+  if (!G){ el.innerHTML = '<div class="empty" style="grid-column:1/-1">No keyword graph file (data/graph.js) was found.</div>'; return; }
+  const muted = new Set((profile.graph.muted||[]).map(normKey));
+  const ranked = [];
+  for (let i = 0; i < GN; i++) if (gWeight[i] >= G_FLOOR) ranked.push(i);
+  ranked.sort((a,b) => gWeight[b] - gWeight[a] || G.terms[b].df - G.terms[a].df);
+  const derived = ranked.filter(i => !gSeeds.has(i));
+  const seeds = ranked.filter(i => gSeeds.has(i));
+  const q = webQuery.trim().toLowerCase();
+  const found = q ? G.terms.filter(t => t.label.toLowerCase().includes(q)).sort((a,b)=>b.df-a.df).slice(0, 25) : [];
+  const kwRow = (i) => { const t = G.terms[i]; const isSeed = gSeeds.has(i); const isMuted = muted.has(normKey(t.label));
+    return `<div class="kw ${isSeed?'seed':''} ${isMuted?'muted':''}" data-t="${i}"><span><a href="#" data-sel="${i}">${esc(t.label)}</a> <span class="w">${t.kind==='taxonomy'?'ASH keyword · ':''}${t.df} items${gWeight[i]>0?` · w ${gWeight[i].toFixed(2)}`:''}</span></span>
+      ${isSeed ? `<button class="btn tiny" data-rm="${i}" title="Remove from interests">−</button>` : `<button class="btn tiny" data-add="${i}" title="Add to interests">+</button>`}
+      ${isMuted ? `<button class="btn tiny" data-unmute="${i}" title="Unmute">unmute</button>` : `<button class="btn tiny" data-mute="${i}" title="Mute: never let this keyword add points">mute</button>`}</div>`; };
+  el.innerHTML = `
+    <div>
+      <h3 class="sec">Find a keyword</h3>
+      <input type="search" id="kwq" placeholder="e.g. treg, cmv, flow cytometry" value="${esc(webQuery)}">
+      ${found.length ? `<div style="margin-top:6px">${found.map(t=>kwRow(t.id)).join('')}</div>` : (q ? '<div class="legend" style="margin-top:6px">no keyword contains that text</div>' : '')}
+      <h3 class="sec">Your seed keywords (${seeds.length} matched in the corpus)</h3>
+      <div class="legend">Interest terms that exist as nodes in the web. Terms not listed here still score by text matching.</div>
+      ${seeds.map(i=>kwRow(i)).join('') || '<div class="legend">none</div>'}
+    </div>
+    <div id="webmain"><canvas id="webcanvas"></canvas>
+      <div style="position:absolute;left:10px;top:8px;font-size:12px;color:var(--muted);pointer-events:none">Drag nodes · click to inspect · size = weight · amber = your terms, blue = related, grey = muted</div></div>
+    <div>
+      <h3 class="sec">Related keywords the web suggests (${derived.length})</h3>
+      <div class="legend">Co-occur with your terms across ${G.n_items.toLocaleString()} items. They already add points (weight shown); add one to make it a full interest term, or mute it.</div>
+      ${derived.slice(0, 60).map(i=>kwRow(i)).join('')}
+      <div id="webdetail"></div>
+    </div>`;
+  el.querySelector('#kwq').addEventListener('input', e => { webQuery = e.target.value; renderWeb(); const v = el.querySelector('#kwq'); v.focus(); v.setSelectionRange(v.value.length, v.value.length); });
+  el.onclick = e => {
+    const a = e.target.closest('[data-add]'); if (a){ addTermToInterests(gLabel[+a.dataset.add]); return; }
+    const r = e.target.closest('[data-rm]'); if (r){ removeTermFromInterests(gLabel[+r.dataset.rm]); return; }
+    const m = e.target.closest('[data-mute]'); if (m){ muteTerm(gLabel[+m.dataset.mute]); return; }
+    const u = e.target.closest('[data-unmute]'); if (u){ unmuteTerm(gLabel[+u.dataset.unmute]); return; }
+    const s = e.target.closest('[data-sel]'); if (s){ e.preventDefault(); webSel = +s.dataset.sel; renderWebDetail(); if (!webNodes.some(n => n.id === webSel)) buildWebLayout(seeds, derived); drawWeb(); return; }
+    const o = e.target.closest('[data-open]'); if (o){ e.preventDefault(); selected = o.dataset.open; switchTab('rank'); renderDetail(); }
+  };
+  buildWebLayout(seeds, derived);
+  renderWebDetail();
+}
+function renderWebDetail(){
+  const d = document.getElementById('webdetail'); if (!d) return;
+  if (webSel == null){ d.innerHTML = ''; return; }
+  const t = G.terms[webSel];
+  const nb = gNb[webSel].slice().sort((a,b)=>b[1]-a[1]).slice(0, 15);
+  d.innerHTML = `<h3 class="sec">${esc(t.label)}</h3><div class="legend">${t.df} items · weight ${(gWeight[webSel]||0).toFixed(2)}${gSeeds.has(webSel)?' · your term':''}</div>
+    <div class="chips" style="margin:6px 0">${gSeeds.has(webSel)?`<button class="btn tiny" data-rm="${webSel}">remove from interests</button>`:`<button class="btn tiny" data-add="${webSel}">+ add to interests</button>`} <button class="btn tiny" data-mute="${webSel}">mute</button></div>
+    <div class="legend">Linked keywords</div><div class="chips" style="margin:4px 0 8px">${nb.map(([b,w])=>`<a href="#" class="chip small ${gSeeds.has(b)?'term':'gterm'}" data-sel="${b}" title="link strength ${w}">${esc(gLabel[b])}</a>`).join('')}</div>
+    <div class="legend">Top items with this keyword</div>${itemsWithTerm(webSel, 8).map(it=>`<div class="child" data-open="${it.id}"><div class="t">${it._score.toFixed(0)}</div><div>${esc(it.title)}<div class="t">${esc(fmtDay(it.date))} · ${esc(it.program||'')}</div></div><div></div></div>`).join('')}`;
+}
+function buildWebLayout(seeds, derived){
+  const canvas = document.getElementById('webcanvas'); if (!canvas) return;
+  const ids = seeds.slice(0, 50).concat(derived.slice(0, 70));
+  if (webSel != null && !ids.includes(webSel)) ids.push(webSel);
+  const idx = new Map(ids.map((id, i) => [id, i]));
+  const W = canvas.parentElement.clientWidth || 600, H = canvas.parentElement.clientHeight || 500;
+  const old = new Map(webNodes.map(n => [n.id, n]));
+  webNodes = ids.map((id, i) => { const o = old.get(id); const ang = i / ids.length * Math.PI * 2; const r = Math.min(W, H) * 0.35;
+    return {id, x: o ? o.x : W/2 + r*Math.cos(ang), y: o ? o.y : H/2 + r*Math.sin(ang), vx:0, vy:0, w: gWeight[id] || 0.2, seed: gSeeds.has(id), fixed: o ? o.fixed : false}; });
+  webEdges = [];
+  for (const n of webNodes) for (const [b, w] of gNb[n.id]) if (idx.has(b) && idx.get(b) > idx.get(n.id)) webEdges.push([idx.get(n.id), idx.get(b), w]);
+  let steps = 0;
+  const tick = () => {
+    const k = 0.02, rep = 9000, damp = 0.8;
+    for (const a of webNodes){ a.fx = (W/2 - a.x) * 0.0012; a.fy = (H/2 - a.y) * 0.0012; }
+    for (let i = 0; i < webNodes.length; i++) for (let j = i+1; j < webNodes.length; j++){
+      const a = webNodes[i], b = webNodes[j]; let dx = b.x - a.x, dy = b.y - a.y; let d2 = dx*dx + dy*dy + 0.01; if (d2 > 360000) continue;
+      const f = rep / d2; const d = Math.sqrt(d2); dx /= d; dy /= d; a.fx -= dx*f; a.fy -= dy*f; b.fx += dx*f; b.fy += dy*f; }
+    for (const [i, j, w] of webEdges){ const a = webNodes[i], b = webNodes[j]; const dx = b.x - a.x, dy = b.y - a.y; const d = Math.sqrt(dx*dx+dy*dy)+0.01; const target = 90 + 140*(1-w); const f = k * (d - target) * (0.2 + w); a.fx += dx/d*f; a.fy += dy/d*f; b.fx -= dx/d*f; b.fy -= dy/d*f; }
+    for (const a of webNodes){ if (a.fixed) continue; a.vx = (a.vx + a.fx) * damp; a.vy = (a.vy + a.fy) * damp; a.x = Math.max(20, Math.min(W-20, a.x + a.vx)); a.y = Math.max(20, Math.min(H-20, a.y + a.vy)); }
+    drawWeb();
+    if (++steps < 240) webAnim = requestAnimationFrame(tick);
+  };
+  if (webAnim) cancelAnimationFrame(webAnim);
+  webAnim = requestAnimationFrame(tick);
+  let drag = null;
+  const pos = ev => { const r = canvas.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
+  const hit = (x, y) => { let best = null, bd = 1e9; for (const n of webNodes){ const d = Math.hypot(n.x - x, n.y - y); const rr = 6 + 7*n.w; if (d < rr + 3 && d < bd){ best = n; bd = d; } } return best; };
+  canvas.onmousedown = ev => { const [x, y] = pos(ev); const n = hit(x, y); if (n){ drag = n; n.fixed = true; n._x0 = x; n._y0 = y; } };
+  canvas.onmousemove = ev => { const [x, y] = pos(ev); if (drag){ drag.x = x; drag.y = y; drawWeb(); return; } const h = hit(x, y); canvas.style.cursor = h ? 'pointer' : 'grab'; canvas.title = h ? gLabel[h.id] : ''; };
+  canvas.onmouseup = ev => { const [x, y] = pos(ev); if (drag){ const n = drag; drag = null; if (Math.hypot(n._x0 - x, n._y0 - y) < 3){ webSel = n.id; renderWebDetail(); drawWeb(); } } };
+  canvas.onmouseleave = () => { drag = null; };
+}
+function drawWeb(){
+  const canvas = document.getElementById('webcanvas'); if (!canvas) return;
+  const W = canvas.parentElement.clientWidth, H = canvas.parentElement.clientHeight; const dpr = window.devicePixelRatio || 1;
+  if (canvas.width !== W*dpr || canvas.height !== H*dpr){ canvas.width = W*dpr; canvas.height = H*dpr; }
+  const ctx = canvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  const muted = new Set((profile.graph.muted||[]).map(normKey));
+  for (const [i, j, w] of webEdges){ const a = webNodes[i], b = webNodes[j]; const hl = webSel != null && (a.id === webSel || b.id === webSel); ctx.strokeStyle = hl ? 'rgba(138,28,28,.7)' : `rgba(90,110,140,${0.08 + 0.35*w})`; ctx.lineWidth = hl ? 1.6 : 0.6 + 1.6*w; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+  ctx.font = '11px -apple-system, Helvetica, Arial'; ctx.textBaseline = 'middle';
+  for (const n of webNodes){ const r = 6 + 7*n.w; const isM = muted.has(normKey(gLabel[n.id]));
+    ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2); ctx.fillStyle = isM ? '#c4c9ce' : n.seed ? '#f2b544' : '#7fa8d9'; ctx.fill();
+    if (n.id === webSel){ ctx.lineWidth = 2.5; ctx.strokeStyle = '#8a1c1c'; ctx.stroke(); }
+    const lbl = gLabel[n.id]; ctx.fillStyle = '#1b1f24'; ctx.textAlign = 'left'; ctx.fillText(lbl.length > 26 ? lbl.slice(0, 25) + '…' : lbl, n.x + r + 3, n.y); }
 }
 // ---------- calendar ----------
 function chosenItems(includeMaybe){ return items.filter(it => decisions[it.id] === 'attend' || (includeMaybe && decisions[it.id] === 'maybe')); }
@@ -442,15 +665,15 @@ function calendarEvents(includeMaybe){
   const ch = chosenItems(includeMaybe);
   const groups = new Map(); const evs = [];
   for (const it of ch){
-    if (isPoster(it) && it.type === 'abstract' && it.parent_id){
+    if (isPoster(it) && it.type !== 'session' && it.parent_id){
       const g = groups.get(it.parent_id) || {posters:[], parent: byId.get(it.parent_id)};
       g.posters.push(it); groups.set(it.parent_id, g);
     } else evs.push(it);
   }
   for (const [pid, g] of groups){
     const p = g.parent;
-    if (ch.includes(p)) { p._posters = g.posters; continue; }
-    const ev = Object.assign(Object.create(null), p, {id:'grp-'+pid, title:(p?.title||'Poster session') + ' — ' + g.posters.length + ' poster' + (g.posters.length>1?'s':''), _posters:g.posters, _group:'grp-'+pid, _isGroup:true});
+    if (p && ch.includes(p)) { p._posters = g.posters; continue; }
+    const ev = Object.assign(Object.create(null), p || {}, {id:'grp-'+pid, title:(p?.title||'Poster session') + ' — ' + g.posters.length + ' poster' + (g.posters.length>1?'s':''), _posters:g.posters, _group:'grp-'+pid, _isGroup:true});
     ev.date = p?.date || g.posters[0].date; ev._min = p?._min ?? g.posters[0]._min; ev._max = p?._max ?? g.posters[0]._max; ev.start = p?.start||g.posters[0].start; ev.end = p?.end||g.posters[0].end; ev.location = p?.location||g.posters[0].location;
     decisions[ev.id] = g.posters.some(x=>decisions[x.id]==='attend') ? 'attend' : 'maybe';
     evs.push(ev);
@@ -465,7 +688,7 @@ function renderCal(){
   const calDays = days.filter(d => evs.some(e => e.date === d));
   const show = calDays.length ? calDays : days.slice(2, 7);
   const H0 = 7, H1 = 21;
-  let html = `<div class="cal-head"><h2 style="margin:0;font-size:17px">My calendar</h2>
+  let html = `<div class="cal-head"><h2 style="margin:0;font-size:17px">${esc(me ? me + "'s" : 'My')} calendar</h2>
     <label class="row"><input type="checkbox" id="calMaybe" ${includeMaybe?'checked':''}> include "maybe"</label>
     <button class="btn" id="icsAttend">Export .ics (attend)</button><button class="btn" id="icsAll">Export .ics (attend + maybe)</button>
     <button class="btn" id="printCal">Print list</button>
@@ -475,21 +698,14 @@ function renderCal(){
     <div class="gcol axis">${Array.from({length:H1-H0},(_,i)=>`<div class="hr" style="top:${i*60}px">${fmtTime(String(H0+i).padStart(2,'0')+':00')}</div>`).join('')}</div>`;
   for (const d of show){
     const dayEvs = evs.filter(e => e.date === d).sort((a,b)=>a._min-b._min || b._max-a._max);
-    // column assignment for overlapping events
     const cols = []; const placed = [];
-    for (const e of dayEvs){
-      let c = 0; while (cols[c] && cols[c] > e._min) c++;
-      cols[c] = e._max; placed.push({e, c});
-    }
-    // cluster width = number of columns among overlapping events
+    for (const e of dayEvs){ let c = 0; while (cols[c] && cols[c] > e._min) c++; cols[c] = e._max; placed.push({e, c}); }
     for (const p of placed){ const ov = placed.filter(q => overlaps(q.e, p.e)); p.n = Math.max(1, ...ov.map(q=>q.c+1)); }
     html += `<div class="gcol">${Array.from({length:H1-H0},(_,i)=>`<div class="hr" style="top:${i*60}px"></div>`).join('')}
       ${placed.map(({e,c,n}) => { const top = Math.max(0, e._min - H0*60), h = Math.max(22, Math.min(e._max, H1*60) - Math.max(e._min, H0*60)); const d2 = decisions[e.id]||'maybe';
         return `<div class="ev ${d2} ${conf.has(e.id)?'conflict':''}" data-ev="${esc(e.id)}" style="top:${top}px;height:${h-2}px;left:calc(${(100/n)*c}% + 2px);width:calc(${100/n}% - 5px)" title="${esc(e.title)}"><div class="t">${esc(fmtTime(e.start))}–${esc(fmtTime(e.end))}</div><div>${esc(e.title)}</div><div class="loc">${esc(e.location||'')}</div></div>`; }).join('')}</div>`;
   }
-  html += `</div>`;
-  // list view
-  html += `<div class="plist" id="plist"><h3 class="sec">Agenda list</h3>`;
+  html += `</div><div class="plist" id="plist"><h3 class="sec">Agenda list</h3>`;
   for (const d of show){
     const dayEvs = evs.filter(e => e.date === d).sort((a,b)=>a._min-b._min);
     if (!dayEvs.length) continue;
@@ -501,9 +717,9 @@ function renderCal(){
   el.querySelector('#icsAttend').addEventListener('click', () => exportIcs(false));
   el.querySelector('#icsAll').addEventListener('click', () => exportIcs(true));
   el.querySelector('#printCal').addEventListener('click', () => { const w = window.open('', '_blank'); w.document.write(`<title>ASH 2026 agenda</title><style>body{font:13px -apple-system,Helvetica,Arial;padding:20px}h4{margin:14px 0 4px}li{margin:3px 0}.legend{color:#666}</style>` + el.querySelector('#plist').innerHTML); w.document.close(); w.print(); });
-  el.addEventListener('click', e => { const t = e.target.closest('[data-ev]'); if (!t) return; e.stopPropagation(); let id = t.dataset.ev; if (id.startsWith('grp-')) id = id.slice(4); if (!byId.has(id)) return; selected = id; switchTab('rank'); renderDetail(); }, {once:true});
+  el.onclick = e => { const t = e.target.closest('[data-ev]'); if (!t) return; e.stopPropagation(); let id = t.dataset.ev; if (id.startsWith('grp-')) id = id.slice(4); if (!byId.has(id)) return; selected = id; switchTab('rank'); renderDetail(); };
 }
-// ---------- exports ----------
+// ---------- exports & sharing ----------
 function icsDate(date, hm){ const [y,mo,d] = date.split('-').map(Number); const [h,mi] = hm.split(':').map(Number); const dt = new Date(Date.UTC(y, mo-1, d, h+6, mi)); return dt.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''); }
 const icsEsc = s => String(s||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/[,;]/g, m => '\\'+m);
 function exportIcs(includeMaybe){
@@ -531,21 +747,54 @@ function exportCsv(){
   const out = [cols.join(',')].concat(rows.map(it => cols.map(c => q(c==='decision'?decisions[it.id]:c==='presenters'?(it.presenters||[]).join('; '):c==='score'?it._score.toFixed(1):c==='note'?(notes[it.id]||''):it[c])).join(',')));
   download('ash2026-my-picks.csv', out.join('\n'), 'text/csv');
 }
+const b64u = { enc: bytes => { let s = ''; for (const b of bytes) s += String.fromCharCode(b); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }, dec: s => Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0)) };
+async function compress(str){ const bytes = new TextEncoder().encode(str); if (!('CompressionStream' in window)) return 'r' + b64u.enc(bytes); const cs = new CompressionStream('deflate-raw'); const w = cs.writable.getWriter(); w.write(bytes); w.close(); const out = new Uint8Array(await new Response(cs.readable).arrayBuffer()); return 'z' + b64u.enc(out); }
+async function decompress(s){ const bytes = b64u.dec(s.slice(1)); if (s[0] === 'r') return new TextDecoder().decode(bytes); const ds = new DecompressionStream('deflate-raw'); const w = ds.writable.getWriter(); w.write(bytes); w.close(); return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer()); }
+async function makeShareLink(){
+  if (!me){ const v = prompt('Your name (shown to whoever opens the link):', ''); if (v === null) return; me = v.trim(); store.set('me', me); renderWho(); }
+  const payload = {n: me || 'A friend', a: Object.keys(decisions).filter(k => decisions[k]==='attend' && byId.has(k)), m: Object.keys(decisions).filter(k => decisions[k]==='maybe' && byId.has(k)), p: profile};
+  const url = location.href.split('#')[0] + '#share=' + await compress(JSON.stringify(payload));
+  try { await navigator.clipboard.writeText(url); toast(`Link copied (${(url.length/1024).toFixed(1)} KB). Whoever opens it keeps their own picks.`); } catch(e){ prompt('Copy this link:', url); }
+}
+async function loadShare(){
+  const m = location.hash.match(/#share=([^&]+)/); if (!m) return;
+  try {
+    const p = JSON.parse(await decompress(m[1]));
+    shared = {name: p.n || 'A friend', attend: new Set(p.a||[]), maybe: new Set(p.m||[]), profile: p.p || null};
+    const b = document.getElementById('banner');
+    b.style.display = 'flex';
+    b.innerHTML = `<b>${esc(shared.name)}</b> shared ${shared.attend.size} attend / ${shared.maybe.size} maybe picks${shared.profile?' and an interest profile':''}. Your own picks are untouched.
+      <button class="btn tiny" id="shOverlay">Show only their picks</button>
+      <button class="btn tiny" id="shImport">Copy their picks into mine</button>
+      ${shared.profile ? '<button class="btn tiny" id="shProfile">Use their interest profile</button>' : ''}
+      <button class="btn tiny" id="shDismiss">Dismiss</button>`;
+    b.querySelector('#shOverlay').addEventListener('click', () => { F.sharedOnly = true; F.decision = 'all'; switchTab('rank'); renderSide(); renderList(); });
+    b.querySelector('#shImport').addEventListener('click', () => { if (!confirm(`Add ${shared.name}'s picks to yours? Your existing decisions are kept.`)) return; for (const id of shared.attend) if (!decisions[id]) decisions[id] = 'attend'; for (const id of shared.maybe) if (!decisions[id]) decisions[id] = 'maybe'; store.set('decisions', decisions); renderList(); renderStats(); toast('Imported'); });
+    const sp = b.querySelector('#shProfile'); if (sp) sp.addEventListener('click', () => { if (!confirm(`Replace your interest profile with ${shared.name}'s?`)) return; profile = shared.profile; if (!profile.graph) profile.graph = JSON.parse(JSON.stringify(DEFAULT_PROFILE.graph)); rescore('Profile replaced'); });
+    b.querySelector('#shDismiss').addEventListener('click', () => { shared = null; F.sharedOnly = false; b.style.display = 'none'; history.replaceState(null, '', location.pathname + location.search); renderSide(); renderList(); });
+    renderSide(); renderList();
+  } catch(e){ console.warn('share link unreadable', e); }
+}
 // ---------- tabs / stats ----------
 function switchTab(t){
   tab = t;
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
-  const cal = document.getElementById('cal'), main = document.getElementById('main'), side = document.getElementById('side'), det = document.getElementById('detail');
+  const cal = document.getElementById('cal'), web = document.getElementById('web'), main = document.getElementById('main'), side = document.getElementById('side'), det = document.getElementById('detail');
+  cal.style.display = 'none'; web.classList.remove('on');
   if (t === 'cal'){ cal.style.display = 'block'; main.style.display = side.style.display = det.style.display = 'none'; renderCal(); }
-  else { cal.style.display = 'none'; main.style.display = side.style.display = det.style.display = ''; if (t === 'profile') renderProfile(); else renderDetail(); }
+  else if (t === 'web'){ web.classList.add('on'); main.style.display = side.style.display = det.style.display = 'none'; renderWeb(); }
+  else { main.style.display = side.style.display = det.style.display = ''; if (t === 'profile') renderProfile(); else renderDetail(); }
 }
 document.querySelector('.tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) switchTab(b.dataset.tab); });
+function renderWho(){ document.getElementById('who').textContent = me || 'You'; }
+document.getElementById('who').addEventListener('click', () => { const v = prompt('Your name (used in share links and the calendar title):', me || ''); if (v !== null){ me = v.trim(); store.set('me', me); renderWho(); } });
 function renderStats(){
   const m = DATA.meta || {};
   document.getElementById('stats').textContent = `${(m.items||items.length).toLocaleString()} items · ${(m.with_abstract||0).toLocaleString()} abstracts · ${Object.values(decisions).filter(d=>d==='attend').length} attend / ${Object.values(decisions).filter(d=>d==='maybe').length} maybe`;
 }
-function renderAll(){ renderSide(); renderList(); renderStats(); if (tab==='profile') renderProfile(); else renderDetail(); }
-scoreAll(); renderAll();
+function renderAll(){ renderWho(); renderSide(); renderList(); renderStats(); if (tab==='profile') renderProfile(); else if (tab==='web') renderWeb(); else renderDetail(); }
+window.addEventListener('resize', () => { if (tab === 'web') drawWeb(); });
+scoreAll(); renderAll(); loadShare();
 </script>
 </body>
 </html>

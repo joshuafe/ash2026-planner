@@ -150,5 +150,10 @@ core = [slim(it) for it in order]
 with open(os.path.join(DEST, 'data', 'core.js'), 'w', encoding='utf-8') as f:
     f.write('window.ASH_DATA=' + json.dumps({'meta': meta, 'items': core}, ensure_ascii=False, separators=(',', ':')) + ';\n')
 with open(os.path.join(DEST, 'data', 'abstracts.js'), 'w', encoding='utf-8') as f:
-    f.write('window.ASH_ABSTRACTS=' + json.dumps({it['id']: dict({k: it[k] for k in heavy if it[k]}, **({'author_affil': [a['affil'] for a in it['authors']]} if any(a['affil'] for a in it['authors']) else {})) for it in order}, ensure_ascii=False, separators=(',', ':')) + ';\n')
+    def heavy_of(it):
+        d = {k: it[k] for k in heavy if it[k] and k != 'disclosures'}
+        if it['abstract'] or it['description']: d.pop('ep_description', None)   # app text is redundant once ASH text exists
+        if any(a['affil'] for a in it['authors']): d['author_affil'] = [a['affil'] for a in it['authors']]
+        return d
+    f.write('window.ASH_ABSTRACTS=' + json.dumps({it['id']: heavy_of(it) for it in order}, ensure_ascii=False, separators=(',', ':')) + ';\n')
 print(json.dumps(meta, indent=1))
