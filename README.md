@@ -4,12 +4,13 @@ Personal planning tool for the ASH 2026 Annual Meeting (New Orleans, Dec 9–18,
 Open `index.html` in a browser, or publish the folder with GitHub Pages and share the URL.
 
 ## The planner (`index.html`)
-- **Rank & review** — every session, abstract and talk ranked by your interest profile; filters by day, program, type; full-text search; ★ attend / ? maybe / ✕ skip; notes; links to the ASH program page and the app.
-- **My calendar** — day grid of your picks with time-conflict flags, posters grouped per poster session, `.ics` export (Apple/Google/Outlook), CSV export, printable list.
-- **Keyword web** — a co-occurrence graph of ~4,000 keywords mined from all titles and abstracts plus ASH's own topic tags. Your interest terms seed it; weight spreads to linked keywords, which then add points to items that mention them. Add a suggested keyword to your interests, mute one, click any node to see its neighbours and top items.
-- **Interests** — topics (terms + weight), people, institutions, excluded terms, program weights, and the keyword-web strength/spread.
+Phone-first, works offline from the folder or from GitHub Pages. Four tabs:
+- **Picks** — every session, abstract and talk ranked by fit, with day pills, search and filters (type, program, decision, minimum fit, order). Tap an entry for the full abstract, people, why it fits, the talks inside a session, notes and links. Star to attend, or choose attend / maybe / skip in the sheet.
+- **Plan** — your picks day by day with free gaps and overlap flags (a time grid on wide screens). *Add to calendar* downloads an `.ics` file for Outlook, Google or Apple Calendar: Central-time events with a VTIMEZONE block, stable identifiers so re-imports update, room, presenters, abstract excerpt and link.
+- **Web** — the keyword web: your terms, the related keywords it picked up (add or mute them), and a draggable map. Tap a keyword to see what it travels with and the best entries that mention it.
+- **Me** — name, the interest editor, *Rebuild my interest web* (the setup wizard), share link, back up and restore.
 
-Everything you do is saved in **your own browser** (localStorage). Anyone you send the app or its link to starts with the default profile and keeps their own picks. To show someone your picks, use **Share link**: it encodes your attend/maybe choices and interest profile in the URL; they can view them as an overlay, copy them, or adopt your profile — their own choices are never overwritten. **Backup/Restore** moves your state between browsers or devices.
+**Each person builds their own web.** On first open the wizard asks for areas of interest (22 bundles with weights) and a free-text description of your work, from which it extracts matching keywords from the corpus. Everything is saved in that browser only, so anyone you send the link to gets their own profile, picks and notes. A **share link** carries your picks and interests to someone else as an overlay they can copy or adopt, without touching their own.
 
 ## Scoring
 A term scores when it appears in a title (3), ASH keywords (2), session title (1.5), abstract (1–2 by frequency) or description (1); per topic the sum is capped and multiplied by the topic weight. The keyword web adds `6·ln(1 + s/4)` where `s` sums propagated keyword weights (title hits count double, broad keywords are down-weighted). The total is scaled by the program weight; people (+8) and institutions (+3) add bonuses; excluded terms subtract 8. A session also inherits 60% of the mean of its three best talks.

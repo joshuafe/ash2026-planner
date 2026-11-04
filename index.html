@@ -2,178 +2,286 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f8fb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>ASH 2026 Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f4f5f7;--panel:#fff;--ink:#1b1f24;--muted:#5d6670;--line:#e1e5ea;--accent:#8a1c1c;--accent2:#1f5f8b;--attend:#1e7d46;--maybe:#b7791f;--skip:#8d969e;--chip:#eef1f4;--hl:#fff3c4;--graph:#2b6cb0}
-*{box-sizing:border-box}
+:root{
+  --paper:#f7f8fb; --card:#ffffff; --ink:#241f2e; --ink2:#4e4760; --muted:#7a7388; --hair:#e6e3ec; --hair2:#d3cfdc;
+  --stain:#5b3fa0; --stain-deep:#3f2a78; --stain-soft:#ece6f7; --stain-mid:#c9bde6;
+  --eosin:#d4607f; --eosin-soft:#fbe9ee; --sky-soft:#e6eef7;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif; --sans:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --nav:64px; --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box} html{-webkit-text-size-adjust:100%}
 html,body{height:100%}
-body{margin:0;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-header{display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--accent);color:#fff;position:sticky;top:0;z-index:5;flex-wrap:wrap}
-header h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.2px}
-.tabs button{background:transparent;border:1px solid rgba(255,255,255,.55);color:#fff;padding:4px 12px;border-radius:999px;cursor:pointer;margin-right:4px;font-size:13px}
-.tabs button.active{background:#fff;color:var(--accent);font-weight:600}
-header .stats{margin-left:auto;font-size:12px;opacity:.92}
-header .who{font-size:12px;background:rgba(255,255,255,.15);border-radius:999px;padding:2px 10px;cursor:pointer}
-#app{display:grid;grid-template-columns:270px minmax(0,1fr) 460px;gap:10px;padding:10px;height:calc(100vh - 46px)}
-aside,main,#detail{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;min-height:0}
-aside{padding:12px}
-main{padding:0}
-#detail{padding:14px 16px}
-h3.sec{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 6px}
-h3.sec:first-child{margin-top:0}
-.chips{display:flex;flex-wrap:wrap;gap:4px}
-.chip{background:var(--chip);border:1px solid transparent;border-radius:999px;padding:2px 9px;font-size:12px;cursor:pointer;user-select:none;white-space:nowrap}
-.chip.on{background:var(--accent2);color:#fff}
-.chip.small{font-size:11px;padding:1px 7px;cursor:default}
-.chip.term{background:var(--hl);border-color:#e8d58a;cursor:default}
-.chip.gterm{background:#e3eefb;border-color:#b9d2f0;cursor:default}
-.chip.shared{background:#f3e8ff;border-color:#d6bcfa;cursor:default}
-a.chip{text-decoration:none;color:inherit;cursor:pointer}
-input[type=text],input[type=search],input[type=number],textarea,select{font:inherit;border:1px solid var(--line);border-radius:6px;padding:5px 7px;width:100%;background:#fff;color:var(--ink)}
-textarea{resize:vertical}
-label.row{display:flex;align-items:center;gap:6px;font-size:13px;margin:3px 0;cursor:pointer}
-button.btn{font:inherit;border:1px solid var(--line);background:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px}
-button.btn.primary{background:var(--accent2);border-color:var(--accent2);color:#fff}
-button.btn.danger{color:var(--accent)}
-button.btn.tiny{padding:1px 7px;font-size:11px}
-.toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:2}
-.toolbar .count{color:var(--muted);font-size:12px;margin-left:auto}
-.row-item{display:grid;grid-template-columns:54px 1fr auto;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;align-items:start}
-.row-item:hover{background:#fafbfc}
-.row-item.sel{background:#f1f6fb}
-.row-item.attend{border-left:4px solid var(--attend)}
-.row-item.maybe{border-left:4px solid var(--maybe)}
-.row-item.skip{opacity:.5;border-left:4px solid var(--skip)}
-.score{font-weight:700;font-size:15px;text-align:right;line-height:1.1}
-.score small{display:block;font-weight:400;color:var(--muted);font-size:10px}
-.bar{height:4px;background:#e9ecef;border-radius:2px;margin-top:4px;overflow:hidden;display:flex}
-.bar i{display:block;height:100%;background:var(--accent2)}
-.bar b{display:block;height:100%;background:#90b4e0}
-.title{font-weight:600;line-height:1.3}
-.meta{color:var(--muted);font-size:12px;margin-top:2px}
-.type{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:4px;background:var(--chip);color:var(--muted);margin-right:6px;vertical-align:middle}
-.type.session{background:#e8eef7;color:#2a4d7a}.type.abstract{background:#eaf5ec;color:#246b3b}.type.talk{background:#f6ecf7;color:#6b2a74}
-.cme{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;background:#fdecec;color:var(--accent);margin-left:4px;vertical-align:middle}
-.decide{display:flex;gap:3px}
-.decide button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:6px;width:30px;height:28px;cursor:pointer;font-size:14px;line-height:1}
-.decide button.on.attend{background:var(--attend);color:#fff;border-color:var(--attend)}
-.decide button.on.maybe{background:var(--maybe);color:#fff;border-color:var(--maybe)}
-.decide button.on.skip{background:var(--skip);color:#fff;border-color:var(--skip)}
-.more{display:block;width:100%;padding:12px;background:#fafbfc;border:0;border-top:1px solid var(--line);cursor:pointer;font:inherit;color:var(--accent2)}
-#detail h2{font-size:17px;line-height:1.3;margin:4px 0 8px}
-#detail .kv{display:grid;grid-template-columns:90px 1fr;gap:3px 10px;font-size:13px;margin:8px 0}
-#detail .kv b{color:var(--muted);font-weight:500}
-#detail .abstract{white-space:pre-wrap;font-size:13.5px;line-height:1.55;border-left:3px solid var(--line);padding-left:10px;margin:6px 0}
-#detail a{color:var(--accent2)}
-.child{display:grid;grid-template-columns:44px 1fr auto;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px;align-items:start;cursor:pointer}
-.child .t{color:var(--muted);font-size:12px}
-.why{font-size:12.5px;margin:4px 0}
-.why b{font-weight:600}
-.empty{padding:40px;text-align:center;color:var(--muted)}
-.banner{grid-column:1 / -1;background:#f3e8ff;border:1px solid #d6bcfa;border-radius:10px;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px}
-/* profile */
-.topic{border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:8px;background:#fcfcfd}
-.topic .head{display:flex;gap:6px;align-items:center;margin-bottom:5px}
-.topic .head input[type=text]{flex:1}
-.topic .head select{width:70px}
-.topic textarea{font-size:12.5px;min-height:46px}
-.pw{display:grid;grid-template-columns:1fr 70px;gap:4px 8px;align-items:center;font-size:12.5px}
-.slider{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0}
-/* calendar */
-#cal{display:none;grid-column:1 / -1;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;padding:12px}
-.cal-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-.grid{display:grid;grid-template-columns:52px repeat(var(--days),minmax(170px,1fr));gap:0;position:relative;border-top:1px solid var(--line)}
-.gcol{position:relative;border-left:1px solid var(--line);height:calc(var(--hours) * 60px)}
-.gcol.axis{border-left:0}
-.gcol .hr{position:absolute;left:0;right:0;border-top:1px solid #eef0f3;font-size:10px;color:var(--muted);padding-left:4px}
-.dayhead{font-weight:600;padding:6px 8px;border-left:1px solid var(--line);background:#fafbfc;font-size:13px}
-.ev{position:absolute;border-radius:6px;padding:4px 6px;font-size:11.5px;line-height:1.25;overflow:hidden;cursor:pointer;border:1px solid rgba(0,0,0,.08)}
-.ev.attend{background:#dff3e6;border-color:#9fd3b2}
-.ev.maybe{background:#fbefd6;border-color:#ecd39b}
-.ev.conflict{outline:2px solid var(--accent)}
-.ev .t{color:var(--muted);font-size:10.5px}
-.ev .loc{color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.plist{margin-top:14px}
-.plist h4{margin:10px 0 4px;font-size:14px}
-.plist li{font-size:13px;margin:2px 0}
-.legend{font-size:12px;color:var(--muted)}
-.conflicts{background:#fdecec;border:1px solid #f3b9b9;border-radius:8px;padding:8px 12px;margin:8px 0;font-size:13px}
-/* keyword web */
-#web{display:none;grid-column:1 / -1;grid-template-columns:300px minmax(0,1fr) 360px;gap:10px;min-height:0}
-#web.on{display:grid}
-#web > div{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;min-height:0;padding:12px}
-#webmain{padding:0 !important;position:relative;overflow:hidden !important}
-#webcanvas{width:100%;height:100%;display:block;cursor:grab}
-.kw{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:4px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
-.kw .w{color:var(--muted);font-size:11px;white-space:nowrap}
-.kw.seed{background:#fffbea}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+a{color:var(--stain)}
+h1,h2,h3{margin:0;font-weight:500}
+:focus-visible{outline:2px solid var(--stain);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+/* ---------- app frame ---------- */
+#top{position:sticky;top:0;z-index:20;background:rgba(247,248,251,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--hair)}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 16px 6px;max-width:1180px;margin:0 auto}
+.wordmark{font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:-.01em;color:var(--stain-deep)}
+.wordmark small{font-family:var(--sans);font-weight:400;font-size:13px;color:var(--muted);margin-left:6px}
+.topbar .grow{flex:1}
+.iconbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--ink2)}
+.iconbtn:active{background:var(--stain-soft)}
+.iconbtn svg{width:22px;height:22px}
+.namebtn{font-size:14px;color:var(--stain-deep);background:var(--stain-soft);border-radius:999px;padding:6px 12px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subbar{display:flex;gap:8px;align-items:center;padding:4px 16px 10px;overflow-x:auto;scrollbar-width:none;max-width:1180px;margin:0 auto}
+.subbar::-webkit-scrollbar{display:none}
+.pill{flex:0 0 auto;border:1px solid var(--hair2);border-radius:999px;padding:7px 13px;font-size:14px;color:var(--ink2);background:var(--card);line-height:1}
+.pill.on{background:var(--stain);border-color:var(--stain);color:#fff}
+.pill b{font-family:var(--serif);font-weight:600;font-size:15px}
+.searchrow{display:flex;gap:8px;padding:0 16px 10px;max-width:1180px;margin:0 auto}
+.search{flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--hair2);border-radius:14px;padding:0 12px;height:44px}
+.search input{flex:1;border:0;background:none;outline:0;font-size:16px;min-width:0;padding:0}
+.search svg{width:18px;height:18px;color:var(--muted);flex:0 0 auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:44px;padding:0 16px;border-radius:14px;border:1px solid var(--hair2);background:var(--card);color:var(--ink);font-size:15px;white-space:nowrap;text-decoration:none}
+.btn.primary{background:var(--stain);border-color:var(--stain);color:#fff}
+.btn.quiet{border-color:transparent;background:transparent;color:var(--stain-deep)}
+.btn.sm{height:36px;padding:0 12px;font-size:14px;border-radius:11px}
+.btn.danger{color:#a3324f}
+.btn[disabled]{opacity:.45}
+.badge{display:inline-block;background:var(--stain-soft);color:var(--stain-deep);border-radius:999px;padding:1px 8px;font-size:12.5px}
+#views{max-width:1180px;margin:0 auto;padding:0 0 calc(var(--nav) + var(--safe-b) + 16px)}
+.view{display:none}.view.on{display:block}
+/* ---------- bottom nav ---------- */
+#nav{position:fixed;left:0;right:0;bottom:0;z-index:25;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--hair);padding-bottom:var(--safe-b)}
+#nav ul{list-style:none;margin:0 auto;padding:0;display:grid;grid-template-columns:repeat(4,1fr);max-width:640px;height:var(--nav)}
+#nav li{position:relative}
+#nav button{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;color:var(--muted)}
+#nav button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#nav button.on{color:var(--stain-deep)}
+#nav button.on svg{stroke-width:2.2}
+#nav .count{position:absolute;left:calc(50% + 8px);top:8px;background:var(--stain);color:#fff;border-radius:999px;font-size:11px;padding:0 6px;line-height:16px;pointer-events:none}
+/* ---------- entries (timeline list) ---------- */
+.list{padding:4px 0}
+.entry{display:grid;grid-template-columns:58px 18px 1fr 44px;gap:0 8px;padding:12px 10px 12px 14px;border-bottom:1px solid var(--hair);align-items:start;cursor:pointer;position:relative}
+.entry:active{background:#fbfbfd}
+.entry.sel{background:#f3f0fa}
+.entry .when{font-variant-numeric:tabular-nums;color:var(--ink2);font-size:13.5px;line-height:1.3;padding-top:2px}
+.entry .when .day{display:block;font-family:var(--serif);font-weight:600;font-size:14px;color:var(--ink)}
+.entry .when .t2{display:block;color:var(--muted)}
+.fit{padding-top:6px}
+.fit i{display:block;width:12px;height:12px;border-radius:50%;background:var(--stain);transform:scale(var(--f,.4));opacity:calc(.35 + var(--f,.4)*.65)}
+.entry.skip .fit i{background:var(--hair2)}
+.entry .body{min-width:0}
+.entry h3{font-size:16.5px;line-height:1.3;font-weight:700;letter-spacing:-.005em}
+.entry .meta{margin:3px 0 0;font-size:13.5px;color:var(--muted);line-height:1.35}
+.entry .meta b{color:var(--ink2);font-weight:400}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12.5px;line-height:1.4;background:var(--stain-soft);color:var(--stain-deep);text-decoration:none}
+.chip.rel{background:var(--sky-soft);color:#2e4a6b}
+.chip.pink{background:var(--eosin-soft);color:#8f3a53}
+.chip.tag{background:transparent;border:1px solid var(--hair2);color:var(--ink2)}
+.entry .quick{align-self:center;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--hair2)}
+.entry .quick svg{width:22px;height:22px;fill:currentColor}
+.entry.attend .quick{color:var(--stain)}
+.entry.maybe .quick{color:var(--eosin)}
+.entry.attend{box-shadow:inset 4px 0 0 var(--stain)}
+.entry.maybe{box-shadow:inset 4px 0 0 var(--eosin)}
+.entry.skip{opacity:.5}
+.more{display:block;width:100%;padding:16px;color:var(--stain-deep);background:none;border-bottom:1px solid var(--hair)}
+.empty{padding:48px 24px;text-align:center;color:var(--muted);font-size:15px}
+.empty b{display:block;font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:500;margin-bottom:6px}
+.section-h{font-family:var(--serif);font-size:22px;font-weight:500;padding:18px 16px 6px;line-height:1.2}
+.section-h small{display:block;font-family:var(--sans);font-size:13.5px;color:var(--muted);margin-top:4px;line-height:1.4}
+/* ---------- sheets ---------- */
+.sheet-back{position:fixed;inset:0;background:rgba(36,31,46,.35);z-index:40;opacity:0;transition:opacity .2s}
+.sheet-back.on{opacity:1}
+.sheet{position:fixed;left:0;right:0;bottom:0;top:0;z-index:41;background:var(--card);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.sheet.on{transform:none}
+.sheet.half{top:auto;max-height:88vh;border-radius:22px 22px 0 0}
+.sheet .sh-head{display:flex;align-items:center;gap:8px;padding:10px 12px 8px 16px;border-bottom:1px solid var(--hair);flex:0 0 auto}
+.sheet .sh-head h2{flex:1;font-size:15px;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet .sh-body{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 24px}
+.sheet .sh-foot{flex:0 0 auto;border-top:1px solid var(--hair);padding:10px 16px calc(10px + var(--safe-b));background:var(--card)}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--hair2);margin:8px auto 0}
+/* detail */
+.d-title{font-family:var(--serif);font-size:24px;line-height:1.22;font-weight:500;letter-spacing:-.01em;margin:4px 0 10px}
+.d-when{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px;margin:8px 0 12px;align-items:baseline}
+.d-when .k{color:var(--muted);font-size:13.5px}
+.d-when .big{font-family:var(--serif);font-size:20px;font-weight:500}
+.d-sec{margin-top:18px}
+.d-sec h4{font-size:13.5px;color:var(--muted);font-weight:400;margin:0 0 6px}
+.d-abs{white-space:pre-wrap;font-size:16px;line-height:1.55;color:var(--ink)}
+mark{background:var(--eosin-soft);color:inherit;padding:0 2px;border-radius:3px}
+.why{font-size:14.5px;margin:4px 0}
+.why b{font-weight:700}
+.talk{display:grid;grid-template-columns:52px 1fr 36px;gap:8px;padding:8px 0;border-bottom:1px solid var(--hair);font-size:14.5px;cursor:pointer;align-items:start}
+.talk .t{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;padding-top:2px}
+.talk .s{color:var(--muted);font-size:13px}
+.talk .quick{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--hair2)}
+.talk .quick svg{width:20px;height:20px;fill:currentColor}
+.talk.attend .quick{color:var(--stain)}.talk.maybe .quick{color:var(--eosin)}
+.decide{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.decide button{height:48px;border-radius:14px;border:1px solid var(--hair2);background:var(--card);font-size:15px;display:flex;align-items:center;justify-content:center;gap:6px}
+.decide button svg{width:20px;height:20px;fill:currentColor}
+.decide button.attend.on{background:var(--stain);border-color:var(--stain);color:#fff}
+.decide button.maybe.on{background:var(--eosin);border-color:var(--eosin);color:#fff}
+.decide button.skip.on{background:var(--ink2);border-color:var(--ink2);color:#fff}
+textarea,input[type=text],input[type=search],input[type=number],select{width:100%;border:1px solid var(--hair2);border-radius:12px;padding:10px 12px;background:var(--card);font-size:16px}
+textarea{resize:vertical;min-height:72px}
+label.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--hair);font-size:15px;cursor:pointer}
+label.row input[type=checkbox]{width:22px;height:22px;accent-color:var(--stain);flex:0 0 auto}
+.seg{display:inline-flex;border:1px solid var(--hair2);border-radius:12px;overflow:hidden}
+.seg button{padding:8px 14px;font-size:14.5px;color:var(--ink2);background:var(--card)}
+.seg button.on{background:var(--stain-soft);color:var(--stain-deep);font-weight:700}
+.legend{font-size:13.5px;color:var(--muted);line-height:1.45}
+.stack{display:flex;flex-direction:column;gap:10px}
+.rowbtns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* ---------- plan (agenda) ---------- */
+.agenda{padding:0 0 8px}
+.aday{padding:14px 16px 4px;font-family:var(--serif);font-size:22px;font-weight:500;position:sticky;top:0;background:var(--paper);z-index:3}
+.aday small{font-family:var(--sans);font-size:13.5px;color:var(--muted);margin-left:8px}
+.aitem{display:grid;grid-template-columns:62px 1fr;gap:10px;padding:10px 16px;border-left:4px solid var(--stain);margin:6px 16px;background:var(--card);border-radius:0 14px 14px 0;cursor:pointer}
+.aitem.maybe{border-left-color:var(--eosin)}
+.aitem.conflict{outline:2px solid var(--eosin);outline-offset:-2px}
+.aitem .t{font-variant-numeric:tabular-nums;font-size:13.5px;color:var(--ink2);line-height:1.35}
+.aitem .t b{display:block;font-size:15px;color:var(--ink);font-weight:700}
+.aitem h3{font-size:15.5px;line-height:1.3;font-weight:700}
+.aitem .meta{font-size:13.5px;color:var(--muted);margin-top:2px}
+.aitem ul{margin:6px 0 0;padding-left:16px;font-size:13.5px;color:var(--ink2)}
+.conflict-note{margin:8px 16px;padding:10px 12px;background:var(--eosin-soft);color:#8f3a53;border-radius:12px;font-size:14px}
+.gap{color:var(--muted);font-size:13px;padding:2px 32px}
+.grid{display:none}
+/* ---------- keyword web ---------- */
+.kw{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:9px 16px;border-bottom:1px solid var(--hair);font-size:15px}
+.kw a{color:var(--ink);text-decoration:none;font-weight:700}
+.kw .w{display:block;font-size:12.5px;color:var(--muted);font-weight:400}
+.kw.seed{background:#fffaf0}
 .kw.muted{opacity:.45}
-.kw a{color:var(--ink);text-decoration:none;font-weight:500}
-#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;display:none;z-index:9}
-@media (max-width:1100px){#app{grid-template-columns:240px 1fr;height:auto}#detail{grid-column:1 / -1;max-height:70vh}#web.on{grid-template-columns:1fr}#webmain{height:60vh}}
-@media (max-width:760px){#app{grid-template-columns:1fr}aside{max-height:40vh}}
-mark{background:var(--hl);padding:0 1px}
+.kw button{height:34px;min-width:34px;border-radius:10px;border:1px solid var(--hair2);background:var(--card);padding:0 10px;font-size:14px}
+.kw button.on{background:var(--stain-soft);border-color:var(--stain-mid);color:var(--stain-deep)}
+#mapwrap{margin:8px 16px;border:1px solid var(--hair2);border-radius:16px;overflow:hidden;background:var(--card);position:relative;height:60vh;display:none}
+#mapwrap.on{display:block}
+#map{width:100%;height:100%;display:block;touch-action:none}
+#mapnote{position:absolute;left:12px;top:10px;font-size:12.5px;color:var(--muted);pointer-events:none}
+/* ---------- wizard ---------- */
+.wiz h2{font-family:var(--serif);font-size:26px;font-weight:500;line-height:1.2;margin:6px 0 6px}
+.wiz p{margin:0 0 10px}
+.bundle{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--hair)}
+.bundle .nm{flex:1;font-size:15.5px}
+.bundle .nm small{display:block;color:var(--muted);font-size:13px;line-height:1.35}
+.step{display:flex;align-items:center;border:1px solid var(--hair2);border-radius:10px;overflow:hidden;flex:0 0 auto}
+.step button{width:34px;height:36px;font-size:18px;color:var(--stain-deep);background:var(--card)}
+.step span{min-width:30px;text-align:center;font-size:14px}
+.found{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.found button{border:1px solid var(--hair2);border-radius:999px;padding:6px 12px;font-size:14px;background:var(--card)}
+.found button.on{background:var(--stain-soft);border-color:var(--stain-mid);color:var(--stain-deep)}
+/* ---------- profile editor ---------- */
+.topic{border:1px solid var(--hair2);border-radius:14px;padding:10px 12px;margin-bottom:10px;background:var(--card)}
+.topic .head{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.topic .head input[type=text]{flex:1;min-width:0}
+.topic .head select{width:78px}
+.topic .head input[type=checkbox]{width:22px;height:22px;accent-color:var(--stain);flex:0 0 auto}
+.topic textarea{font-size:14.5px;min-height:56px}
+.pw{display:grid;grid-template-columns:1fr 84px;gap:6px 10px;align-items:center;font-size:14.5px}
+.pw input{padding:6px 8px}
+.banner{margin:10px 16px 0;padding:12px 14px;background:var(--stain-soft);border-radius:14px;font-size:14.5px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#toast{position:fixed;left:50%;bottom:calc(var(--nav) + var(--safe-b) + 14px);transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;display:none;z-index:60;max-width:92vw;text-align:center}
+.mark-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--stain);margin-right:6px;vertical-align:middle}
+.mark-dot.pink{background:var(--eosin)}
+#dpanel{display:none}
+/* ---------- desktop ---------- */
+@media (min-width:900px){
+  :root{--nav:0px}
+  body{font-size:15px}
+  #nav{position:sticky;top:0;bottom:auto;border-top:0;border-bottom:1px solid var(--hair);background:rgba(247,248,251,.92)}
+  #nav ul{height:52px;max-width:1180px;grid-template-columns:repeat(4,150px);justify-content:start;padding:0 8px}
+  #nav button{flex-direction:row;gap:8px;font-size:14.5px}
+  #nav button svg{width:20px;height:20px}
+  #nav .count{position:absolute;left:auto;right:18px;top:17px}
+  #top{top:53px}
+  .split{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:0;align-items:start}
+  .split > .listwrap{border-right:1px solid var(--hair);min-height:calc(100vh - 170px)}
+  #dpanel{display:block;position:sticky;top:172px;max-height:calc(100vh - 172px);overflow:auto;padding:16px 24px 32px}
+  #dpanel .d-title{font-size:26px}
+  .agenda{display:none}
+  .grid{display:grid;grid-template-columns:56px repeat(var(--days),minmax(170px,1fr));margin:12px 16px;border-top:1px solid var(--hair2);border-left:1px solid var(--hair2);background:var(--card);border-radius:14px;overflow:hidden}
+  .gcol{position:relative;border-right:1px solid var(--hair);height:calc(var(--hours) * 56px)}
+  .gcol .hr{position:absolute;left:0;right:0;border-top:1px solid #f0eef4;font-size:11px;color:var(--muted);padding:2px 0 0 6px;font-variant-numeric:tabular-nums}
+  .dayhead{font-family:var(--serif);font-size:16px;font-weight:500;padding:8px 10px;border-right:1px solid var(--hair);border-bottom:1px solid var(--hair2);background:var(--paper)}
+  .ev{position:absolute;border-radius:8px;padding:5px 7px;font-size:12px;line-height:1.3;overflow:hidden;cursor:pointer;background:var(--stain-soft);border-left:3px solid var(--stain)}
+  .ev.maybe{background:var(--eosin-soft);border-left-color:var(--eosin)}
+  .ev.conflict{outline:2px solid var(--eosin);outline-offset:-2px}
+  .ev .t{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+  .ev .loc{color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .webgrid{display:grid;grid-template-columns:320px minmax(0,1fr) 340px;gap:0}
+  .webgrid > div{border-right:1px solid var(--hair);min-height:70vh}
+  .webgrid > div:last-child{border-right:0}
+  #mapwrap{display:block;height:460px;margin:12px}
+  #maptoggle{display:none}
+  .entry{grid-template-columns:72px 18px 1fr 44px;padding:12px 16px}
+  .me{max-width:720px;margin:0 auto}
+  .sheet{left:50%;right:auto;width:min(720px,100vw);transform:translate(-50%,100%)}
+  .sheet.on{transform:translate(-50%,0)}
+}
+@media (max-width:899px){ .webgrid > div{border-bottom:1px solid var(--hair)} }
+.hide{display:none !important}
 </style>
 </head>
 <body>
-<header>
-  <h1>ASH 2026 Planner</h1>
-  <div class="tabs">
-    <button data-tab="rank" class="active">Rank &amp; review</button>
-    <button data-tab="cal">My calendar</button>
-    <button data-tab="web">Keyword web</button>
-    <button data-tab="profile">Interests</button>
+<nav id="nav"><ul>
+  <li><button data-v="picks" class="on"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="17" r="3"/></svg>Picks</button></li>
+  <li><button data-v="plan"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Plan</button><span class="count hide" id="navcount"></span></li>
+  <li><button data-v="web"><svg viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="17" r="2.5"/><path d="M8 8l3 7M16 8l-3 7M8.5 7h7"/></svg>Web</button></li>
+  <li><button data-v="me"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Me</button></li>
+</ul></nav>
+<header id="top">
+  <div class="topbar">
+    <div class="wordmark">ASH 2026<small id="stats"></small></div>
+    <div class="grow"></div>
+    <button class="namebtn" id="who" title="Your name">You</button>
+    <button class="iconbtn" id="searchbtn" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
   </div>
-  <span class="who" id="who" title="Click to set your name">You</span>
-  <div class="stats" id="stats"></div>
+  <div id="subbar" class="subbar"></div>
 </header>
-<div id="app">
-  <div class="banner" id="banner" style="display:none"></div>
-  <aside id="side"></aside>
-  <main id="main"></main>
-  <section id="detail"><div class="empty">Select an item to see details.</div></section>
-  <section id="cal"></section>
-  <section id="web"></section>
+<div id="views">
+  <div id="banner" class="hide"></div>
+  <section class="view on" id="v-picks"></section>
+  <section class="view" id="v-plan"></section>
+  <section class="view" id="v-web"></section>
+  <section class="view" id="v-me"></section>
 </div>
+
+<div id="sheet-back" class="sheet-back hide"></div>
+<div id="sheet" class="sheet"></div>
 <div id="toast"></div>
 <script src="data/core.js"></script>
 <script src="data/abstracts.js"></script>
 <script src="data/graph.js"></script>
 <script>
 'use strict';
-// ---------- default interest profile (edit in the Interests tab) ----------
-const DEFAULT_PROFILE = {
-  topics: [
-    {name:'Allogeneic HCT & GVHD', weight:5, terms:['allogeneic','allo-HCT','alloHCT','hematopoietic cell transplant','hematopoietic stem cell transplant','stem cell transplant','HSCT','HCT','GVHD','graft-versus-host','graft versus host','graft-versus-leukemia','GVL','post-transplant cyclophosphamide','PTCy','conditioning regimen','haploidentical','cord blood','donor selection','chimerism','non-relapse mortality','GRFS','ruxolitinib','abatacept','belumosudil','axatilimab','transplant']},
-    {name:'Immune reconstitution & T-cell biology', weight:5, terms:['immune reconstitution','immune recovery','T-cell reconstitution','T cell reconstitution','thymic','thymopoiesis','TREC','TCR repertoire','T-cell receptor repertoire','regulatory T','Treg','T-cell exhaustion','memory T cell','naive T cell','PD-1','lymphocyte recovery','NK cell reconstitution','CMV reactivation','viral reactivation','alloreactive','T cell depletion','T-cell depletion']},
-    {name:'Cellular therapy (CAR-T, bispecifics)', weight:4, terms:['CAR-T','CAR T','chimeric antigen receptor','cellular therapy','cell therapy','adoptive','bispecific','T-cell engager','cytokine release syndrome','ICANS','virus-specific T cells','NK cell therapy','allogeneic CAR','TIL','gene-modified']},
-    {name:'Immune monitoring & flow cytometry', weight:4, terms:['flow cytometry','spectral cytometry','spectral flow','mass cytometry','CyTOF','immunophenotyping','immune profiling','immune monitoring','single-cell','scRNA-seq','CITE-seq','multiomic','immunopeptidom','biomarker','high-dimensional']},
-    {name:'AI, data science & real-world data', weight:3, terms:['machine learning','artificial intelligence','deep learning','natural language processing','large language model','LLM','predictive model','prediction model','real-world','registry','CIBMTR','EBMT','electronic health record','EHR','digital','computational']},
-    {name:'Outcomes & health services', weight:2, terms:['outcomes research','quality of life','patient-reported','survivorship','late effects','cost-effectiveness','access to transplant','disparities','health services','telehealth']},
-    {name:'Myeloid disease context (AML/MDS, MRD)', weight:2, terms:['acute myeloid leukemia','AML','myelodysplastic','MDS','measurable residual disease','MRD','relapse after transplant','post-transplant maintenance','venetoclax','hypomethylating']},
-  ],
-  people: [],
-  institutions: ['Weill Cornell'],
-  negatives: [],
-  programWeights: {'Education Program':1.3,'Scientific Program':1.3,'Scientific Symposia':1.3,'Scientific Workshops':1.1,'Special-Interest Sessions':1.1,'Special-Interest Sessions and Studios':1.1,'Marquee Sessions':1.2,'Marquee Sessions and Lectures':1.2,'How I Treat':1.2,'Meet the Scientist':1.1,'Education Spotlight Sessions':1.1,'Scientific Spotlight Sessions':1.1,'Oral Abstract Session':1.0,'Poster Abstract Session':0.7,'Clinical Trial Showcases':0.8,'Friday Satellite Symposia':0.6,'Satellite Symposia':0.6,'Trainee Activities and Services':0.5,'Events':0.3,'ASH-Sponsored Events':0.4,'Product Theaters':0.3,'Industry Theaters':0.3,'Industry Forums':0.3,'Company Showcases':0.3,'ASH Poster Walks':0.9,'Blood Journals Studio':0.5,'ASH Wellness Studio':0.2,'MedEd Talks':0.6,'Treating Fairly Talks':0.6},
-  graph: {strength:1.0, alpha:0.35, hops:2, muted:[]}
-};
-// ---------- data ----------
+// =====================================================================
+// Data + engine
+// =====================================================================
 const DATA = window.ASH_DATA || {meta:{}, items:[]};
 const ABS = window.ASH_ABSTRACTS || {};
 const G = window.ASH_GRAPH || null;
 const items = DATA.items;
 const byId = new Map(items.map(i => [i.id, i]));
-const DAYNAMES = {'2026-12-09':'Wed 9','2026-12-10':'Thu 10','2026-12-11':'Fri 11','2026-12-12':'Sat 12','2026-12-13':'Sun 13','2026-12-14':'Mon 14','2026-12-15':'Tue 15','2026-12-16':'Wed 16','2026-12-17':'Thu 17','2026-12-18':'Fri 18'};
+const DAYNAMES = {'2026-12-09':['Wed','9'],'2026-12-10':['Thu','10'],'2026-12-11':['Fri','11'],'2026-12-12':['Sat','12'],'2026-12-13':['Sun','13'],'2026-12-14':['Mon','14'],'2026-12-15':['Tue','15'],'2026-12-16':['Wed','16'],'2026-12-17':['Thu','17'],'2026-12-18':['Fri','18']};
+const dayShort = d => DAYNAMES[d] ? DAYNAMES[d][0] + ' ' + DAYNAMES[d][1] : (d||'');
+const dayLong = d => { if (!DAYNAMES[d]) return d||''; const full = {Wed:'Wednesday',Thu:'Thursday',Fri:'Friday',Sat:'Saturday',Sun:'Sunday',Mon:'Monday',Tue:'Tuesday'}; return full[DAYNAMES[d][0]] + ' ' + DAYNAMES[d][1] + ' December'; };
 function stripDisclosures(s){ if(!s) return ''; const out=[]; const L=s.split('\n'); for(let i=0;i<L.length;i++){ const l=L[i].trim(); if(/^Disclosures?:/i.test(l)){ i++; continue; } if(/^No relevant conflicts/i.test(l)) continue; if(/ - (Honoraria|Research Funding|Consultancy|Membership on a Board|Current Employment|Speakers Bureau|Current equity|Patents|Other|Stock)/.test(l)) continue; out.push(L[i]); } return out.join('\n'); }
-function toMin(hm){ const [h,m]=hm.split(':').map(Number); return h*60+m; }
-for (const it of items) {
+const toMin = hm => { const [h,m] = hm.split(':').map(Number); return h*60+m; };
+for (const it of items){
   const a = ABS[it.id] || {};
   it.abstract = a.abstract || ''; it.description = a.description || ''; it.ep_description = a.ep_description || '';
-  it.affiliations = a.affiliations || {}; it.disclosures = a.disclosures || '';
+  it.affiliations = a.affiliations || {};
   if (a.author_affil) (it.authors||[]).forEach((au, i) => { au.affil = a.author_affil[i] || []; });
-  if ((!it.keywords || !it.keywords.length) && it.parent_id) { const p = byId.get(it.parent_id); if (p && p.keywords) it.keywords = p.keywords; }
+  if ((!it.keywords || !it.keywords.length) && it.parent_id){ const p = byId.get(it.parent_id); if (p && p.keywords) it.keywords = p.keywords; }
   it._title = it.title || ''; it._kw = (it.keywords||[]).join(' | '); it._sess = it.session_title || '';
   it._abs = it.abstract; it._desc = (it.description + '\n' + stripDisclosures(it.ep_description)).trim();
   it._people = [...(it.presenters||[]), ...(it.participants||[]).map(p=>p.name), ...(it.authors||[]).map(p=>p.name), ...(it.ep_speakers||[])].join(' | ');
@@ -184,143 +292,144 @@ for (const it of items) {
 }
 const programs = [...new Set(items.map(i=>i.program).filter(Boolean))].sort();
 const days = [...new Set(items.map(i=>i.date).filter(Boolean))].sort();
-// keyword-web index
 const GN = G ? G.terms.length : 0;
 const gLabel = G ? G.terms.map(t => t.label) : [];
 const normKey = s => String(s||'').toLowerCase().replace(/[\s\-\u2010-\u2015_]+/g, '');
-const gIndex = new Map();
-if (G) G.terms.forEach(t => { const k = normKey(t.label); if (!gIndex.has(k)) gIndex.set(k, t.id); });
+const gIndex = new Map(); if (G) G.terms.forEach(t => { const k = normKey(t.label); if (!gIndex.has(k)) gIndex.set(k, t.id); });
 const gNb = G ? Array.from({length: GN}, () => []) : [];
 if (G) for (const [a, b, w] of G.edges){ gNb[a].push([b, w]); gNb[b].push([a, w]); }
-// broad keywords (tagged on hundreds of items) count less than specific ones
 const gIdf = G ? Float32Array.from(G.terms, t => Math.max(0.2, Math.min(1, Math.log(G.n_items / Math.max(1, t.df)) / Math.log(G.n_items / 100)))) : null;
-const G_FLOOR = 0.25;  // propagated weights below this are noise
-// ---------- state ----------
-const store = {
-  get(k, d){ try { const v = localStorage.getItem('ash26.'+k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
-  set(k, v){ try { localStorage.setItem('ash26.'+k, JSON.stringify(v)); } catch(e){} }
-};
-let profile = store.get('profile', null) || JSON.parse(JSON.stringify(DEFAULT_PROFILE));
-if (!profile.graph) profile.graph = JSON.parse(JSON.stringify(DEFAULT_PROFILE.graph));
+const G_FLOOR = 0.25;
+// interest bundles (pick-list in the setup wizard)
+const BUNDLES = [
+  ['Transplantation & GVHD', 'allogeneic, allo-HCT, HCT, HSCT, stem cell transplant, GVHD, graft-versus-host, graft-versus-leukemia, PTCy, post-transplant cyclophosphamide, haploidentical, conditioning regimen, donor, chimerism, non-relapse mortality, GRFS, relapse after transplant'],
+  ['Immune reconstitution & T cells', 'immune reconstitution, immune recovery, thymic, TREC, TCR repertoire, Treg, regulatory T, T-cell exhaustion, memory T cell, naive T cell, CMV reactivation, alloreactive, NK cell, tolerance'],
+  ['CAR-T & cellular therapy', 'CAR-T, CAR T, chimeric antigen receptor, cellular therapy, bispecific, T-cell engager, cytokine release syndrome, ICANS, allogeneic CAR, NK cell therapy, TIL, virus-specific T cells, in vivo CAR'],
+  ['Multiple myeloma & plasma cells', 'multiple myeloma, myeloma, plasma cell, MGUS, smoldering, amyloidosis, daratumumab, teclistamab, cilta-cel, ide-cel, BCMA, GPRC5D, lenalidomide'],
+  ['Lymphoma & CLL', 'lymphoma, DLBCL, diffuse large B-cell, follicular lymphoma, mantle cell, Hodgkin, T-cell lymphoma, CLL, chronic lymphocytic leukemia, BTK inhibitor, glofitamab, epcoritamab, polatuzumab'],
+  ['AML & MDS', 'AML, acute myeloid leukemia, MDS, myelodysplastic, venetoclax, azacitidine, FLT3, IDH1, IDH2, menin inhibitor, NPM1, TP53, MRD, measurable residual disease, CMML'],
+  ['Acute lymphoblastic leukemia', 'ALL, acute lymphoblastic leukemia, blinatumomab, inotuzumab, Ph-positive, Ph-like, asparaginase, pediatric ALL'],
+  ['MPN & CML', 'myeloproliferative, MPN, myelofibrosis, polycythemia vera, essential thrombocythemia, JAK2, CALR, ruxolitinib, momelotinib, CML, chronic myeloid leukemia, tyrosine kinase inhibitor, asciminib'],
+  ['Sickle cell & thalassemia', 'sickle cell, thalassemia, hemoglobinopathy, gene therapy, exa-cel, lovo-cel, hydroxyurea, vaso-occlusive, fetal hemoglobin, iron overload'],
+  ['Hemostasis & thrombosis', 'hemophilia, von Willebrand, factor VIII, emicizumab, thrombosis, venous thromboembolism, anticoagulation, factor XI, ITP, immune thrombocytopenia, TTP, platelet, bleeding disorder, antiphospholipid'],
+  ['Bone marrow failure & PNH', 'aplastic anemia, bone marrow failure, PNH, paroxysmal nocturnal hemoglobinuria, telomere, Fanconi, Diamond-Blackfan, clonal hematopoiesis, CHIP'],
+  ['Red cells & iron', 'iron deficiency, anemia, erythropoiesis, hemolytic anemia, hereditary spherocytosis, pyruvate kinase, hepcidin, iron overload'],
+  ['Pediatric hematology', 'pediatric, children, childhood, adolescent, young adult, neonatal, infant'],
+  ['Immune biology & inflammation', 'innate immunity, macrophage, neutrophil, inflammation, HLH, hemophagocytic, autoimmune cytopenia, immunodeficiency, inborn errors'],
+  ['Flow cytometry & immune monitoring', 'flow cytometry, spectral cytometry, mass cytometry, CyTOF, immunophenotyping, immune profiling, immune monitoring, biomarker'],
+  ['Genomics, single-cell & spatial', 'single-cell, scRNA-seq, spatial, multiomic, CITE-seq, whole-genome, sequencing, clonal evolution, epigenetic, CRISPR, gene editing, base editing'],
+  ['AI & data science', 'machine learning, artificial intelligence, deep learning, large language model, natural language processing, predictive model, real-world, registry, electronic health record, digital health'],
+  ['Outcomes, access & equity', 'outcomes research, quality of life, patient-reported, survivorship, cost-effectiveness, access, disparities, equity, health services, telehealth, global health'],
+  ['Transfusion medicine', 'transfusion, red cell transfusion, platelet transfusion, blood banking, alloimmunization, apheresis'],
+  ['Clinical trials & drug development', 'phase 1, phase 3, randomized, trial design, dose-finding, first-in-human, drug development, FDA approval'],
+  ['Infections in hematology', 'infection, CMV, fungal, antifungal, antimicrobial, vaccination, febrile neutropenia, letermovir'],
+  ['Supportive care & toxicity', 'supportive care, toxicity, adverse events, pain, palliative, fertility, cardiotoxicity, neurotoxicity'],
+];
+const PROGRAM_DEFAULTS = {'Education Program':1.3,'Scientific Program':1.3,'Scientific Symposia':1.3,'Scientific Workshops':1.1,'Special-Interest Sessions':1.1,'Special-Interest Sessions and Studios':1.1,'Marquee Sessions':1.2,'Marquee Sessions and Lectures':1.2,'How I Treat':1.2,'Meet the Scientist':1.1,'Education Spotlight Sessions':1.1,'Scientific Spotlight Sessions':1.1,'Oral Abstract Session':1.0,'Poster Abstract Session':0.7,'Clinical Trial Showcases':0.8,'Friday Satellite Symposia':0.6,'Satellite Symposia':0.6,'Trainee Activities and Services':0.5,'Events':0.3,'ASH-Sponsored Events':0.4,'Product Theaters':0.3,'Industry Theaters':0.3,'Industry Forums':0.3,'Company Showcases':0.3,'ASH Poster Walks':0.9,'Blood Journals Studio':0.5,'ASH Wellness Studio':0.2,'MedEd Talks':0.6,'Treating Fairly Talks':0.6};
+const bundleTerms = i => BUNDLES[i][1].split(/,\s*/);
+const EXAMPLE_PROFILE = { topics: [ {name:BUNDLES[0][0], weight:5, terms:bundleTerms(0)}, {name:BUNDLES[1][0], weight:5, terms:bundleTerms(1)}, {name:BUNDLES[2][0], weight:4, terms:bundleTerms(2)}, {name:BUNDLES[14][0], weight:4, terms:bundleTerms(14)}, {name:BUNDLES[16][0], weight:3, terms:bundleTerms(16)}, {name:BUNDLES[17][0], weight:2, terms:bundleTerms(17)}, {name:BUNDLES[5][0], weight:2, terms:bundleTerms(5)} ], people: [], institutions: [], negatives: [], programWeights: Object.assign({}, PROGRAM_DEFAULTS), graph: {strength:1.0, alpha:0.35, hops:2, muted:[]} };
+const EMPTY_PROFILE = () => ({topics: [], people: [], institutions: [], negatives: [], programWeights: Object.assign({}, PROGRAM_DEFAULTS), graph: {strength:1.0, alpha:0.35, hops:2, muted:[]}});
+// ----- state -----
+const store = { get(k, d){ try { const v = localStorage.getItem('ash26.'+k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }, set(k, v){ try { localStorage.setItem('ash26.'+k, JSON.stringify(v)); } catch(e){} } };
+let profile = store.get('profile', null);
+let firstRun = !profile;
+if (!profile) profile = EMPTY_PROFILE();
+if (!profile.graph) profile.graph = {strength:1.0, alpha:0.35, hops:2, muted:[]};
 let decisions = store.get('decisions', {});
 let notes = store.get('notes', {});
 let me = store.get('me', '');
-const F = Object.assign({day:'all', programs:[], types:{session:true, abstract:true, talk:true}, q:'', minScore:0, decision:'all', sort:'score', hidePosters:false, sharedOnly:false, limit:150}, store.get('filters', {}));
-F.limit = 150; F.sharedOnly = false;
-let selected = null, tab = 'rank', maxScore = 1;
-let shared = null;       // {name, attend:Set, maybe:Set, profile}
-let gWeight = null;      // propagated keyword weights (Float32Array over graph terms)
-let gSeeds = new Map();  // term id -> seed weight
-// ---------- scoring ----------
-function termRe(term){
-  const t = (term||'').trim(); if(!t) return null;
-  const toks = t.split(/[\s\-]+/).filter(Boolean).map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  if(!toks.length) return null;
-  const b1 = /^\w/.test(t) ? '\\b' : '', b2 = /\w$/.test(t) ? '\\b' : '';
-  try { return new RegExp(b1 + toks.join('[\\s\\-]*') + b2, 'gi'); } catch(e){ return null; }
-}
+const F = Object.assign({day:'all', programs:[], types:{session:true, abstract:true, talk:true}, q:'', minScore:0, decision:'all', sort:'score', hidePosters:false}, store.get('filters', {}));
+let limit = 100, view = 'picks', selected = null, shared = null, sharedOnly = false, maxScore = 1, gWeight = null, gSeeds = new Map();
+const isDesk = () => window.matchMedia('(min-width: 900px)').matches;
+// ----- scoring -----
+function termRe(term){ const t = (term||'').trim(); if(!t) return null; const toks = t.split(/[\s\-]+/).filter(Boolean).map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')); if(!toks.length) return null; const b1 = /^\w/.test(t) ? '\\b' : '', b2 = /\w$/.test(t) ? '\\b' : ''; try { return new RegExp(b1 + toks.join('[\\s\\-]*') + b2, 'gi'); } catch(e){ return null; } }
 function count(re, s){ if(!s || !re) return 0; let n = 0; re.lastIndex = 0; while(re.exec(s)){ n++; if(n >= 8) break; } re.lastIndex = 0; return n; }
-function compile(p){
-  const mk = arr => (arr||[]).map(t => ({term:t, re:termRe(t)})).filter(x=>x.re);
-  return {
-    topics: (p.topics||[]).filter(t => t.enabled !== false).map(t => ({name:t.name, weight:+t.weight||1, terms: mk(t.terms)})),
-    people: mk(p.people), institutions: mk(p.institutions), negatives: mk(p.negatives), programWeights: p.programWeights||{}
-  };
-}
+function compile(p){ const mk = arr => (arr||[]).map(t => ({term:t, re:termRe(t)})).filter(x=>x.re); return { topics: (p.topics||[]).filter(t => t.enabled !== false).map(t => ({name:t.name, weight:+t.weight||1, terms: mk(t.terms)})), people: mk(p.people), institutions: mk(p.institutions), negatives: mk(p.negatives), programWeights: p.programWeights||{} }; }
 function computeGraphWeights(){
-  gSeeds = new Map(); gWeight = null;
-  if (!G) return;
-  const g = profile.graph || DEFAULT_PROFILE.graph;
-  const muted = new Set((g.muted||[]).map(m => gIndex.get(normKey(m))).filter(x => x != null));
-  for (const t of (profile.topics||[])){
-    if (t.enabled === false) continue;
-    for (const term of t.terms||[]){
-      const id = gIndex.get(normKey(term));
-      if (id != null && !muted.has(id) && G.terms[id].df <= 0.08 * G.n_items) gSeeds.set(id, Math.max(gSeeds.get(id)||0, +t.weight||1));   // skip tags applied to >8% of items
-    }
-  }
+  gSeeds = new Map(); gWeight = null; if (!G) return;
+  const g = profile.graph; const muted = new Set((g.muted||[]).map(m => gIndex.get(normKey(m))).filter(x => x != null));
+  for (const t of (profile.topics||[])){ if (t.enabled === false) continue; for (const term of t.terms||[]){ const id = gIndex.get(normKey(term)); if (id != null && !muted.has(id) && G.terms[id].df <= 0.08 * G.n_items) gSeeds.set(id, Math.max(gSeeds.get(id)||0, +t.weight||1)); } }
   const w = new Float32Array(GN); for (const [id, s] of gSeeds) w[id] = s;
-  const alpha = +g.alpha || 0, hops = Math.max(0, Math.min(3, +g.hops || 0));
-  let cur = w;
-  for (let h = 0; h < hops; h++){
-    const nxt = new Float32Array(cur);
-    for (let v = 0; v < GN; v++){
-      if (muted.has(v)) { nxt[v] = 0; continue; }
-      let acc = 0;
-      for (const [u, ew] of gNb[v]) if (cur[u] > 0) acc += cur[u] * ew;
-      if (acc > 0){ const seed = gSeeds.get(v) || 0; nxt[v] = Math.max(seed, Math.min(5, seed + alpha * acc)); }
-    }
-    cur = nxt;
-  }
-  for (const m of muted) cur[m] = 0;
-  gWeight = cur;
+  const alpha = +g.alpha || 0, hops = Math.max(0, Math.min(3, +g.hops || 0)); let cur = w;
+  for (let h = 0; h < hops; h++){ const nxt = new Float32Array(cur); for (let v = 0; v < GN; v++){ if (muted.has(v)) { nxt[v] = 0; continue; } let acc = 0; for (const [u, ew] of gNb[v]) if (cur[u] > 0) acc += cur[u] * ew; if (acc > 0){ const seed = gSeeds.get(v) || 0; nxt[v] = Math.max(seed, Math.min(5, seed + alpha * acc)); } } cur = nxt; }
+  for (const m of muted) cur[m] = 0; gWeight = cur;
 }
-function graphScore(it){
-  if (!gWeight) return [0, []];
-  const strength = +(profile.graph && profile.graph.strength) || 0;
-  if (!strength) return [0, []];
-  let s = 0; const hits = [];
-  for (const t of it._gt){ const w = gWeight[t]; if (w >= G_FLOOR){ const v = 2*w*gIdf[t]; s += v; hits.push([t, v]); } }
-  for (const t of it._gb){ const w = gWeight[t]; if (w >= G_FLOOR){ const v = w*gIdf[t]; s += v; hits.push([t, v]); } }
-  const val = strength * 6 * Math.log1p(s / 4);   // diminishing returns so long abstracts do not dominate
-  hits.sort((a,b)=>b[1]-a[1]);
-  return [val, hits.slice(0, 8)];
-}
+function graphScore(it){ if (!gWeight) return [0, []]; const strength = +profile.graph.strength || 0; if (!strength) return [0, []]; let s = 0; const hits = []; for (const t of it._gt){ const w = gWeight[t]; if (w >= G_FLOOR){ const v = 2*w*gIdf[t]; s += v; hits.push([t, v]); } } for (const t of it._gb){ const w = gWeight[t]; if (w >= G_FLOOR){ const v = w*gIdf[t]; s += v; hits.push([t, v]); } } hits.sort((a,b)=>b[1]-a[1]); return [strength * 6 * Math.log1p(s / 4), hits.slice(0, 8)]; }
 function scoreItem(it, P){
   let total = 0; const why = [];
-  for (const t of P.topics){
-    let ts = 0; const matched = [];
-    for (const {term, re} of t.terms){
-      const inT = count(re, it._title) > 0, inK = count(re, it._kw) > 0, inS = count(re, it._sess) > 0, nA = count(re, it._abs), nD = count(re, it._desc);
-      const s = (inT?3:0) + (inK?2:0) + (inS?1.5:0) + (nA ? Math.min(2, 1 + 0.25*(nA-1)) : 0) + (nD?1:0);
-      if (s > 0){ ts += s; matched.push(term); }
-    }
-    if (ts > 0){ const c = t.weight * Math.min(ts, 8); total += c; why.push({topic:t.name, terms:matched, points:c}); }
-  }
-  const [gs, ghits] = graphScore(it);
-  it._gscore = gs; it._ghits = ghits;
-  total += gs;
+  for (const t of P.topics){ let ts = 0; const matched = []; for (const {term, re} of t.terms){ const inT = count(re, it._title) > 0, inK = count(re, it._kw) > 0, inS = count(re, it._sess) > 0, nA = count(re, it._abs), nD = count(re, it._desc); const s = (inT?3:0) + (inK?2:0) + (inS?1.5:0) + (nA ? Math.min(2, 1 + 0.25*(nA-1)) : 0) + (nD?1:0); if (s > 0){ ts += s; matched.push(term); } } if (ts > 0){ const c = t.weight * Math.min(ts, 8); total += c; why.push({topic:t.name, terms:matched, points:c}); } }
+  const [gs, ghits] = graphScore(it); it._gscore = gs; it._ghits = ghits; total += gs;
   const pw = P.programWeights[it.program] ?? 1; total *= pw;
   let bonus = 0; const hits = [];
-  for (const {term, re} of P.people) if (count(re, it._people)) { bonus += 8; hits.push('Person: ' + term); }
-  for (const {term, re} of P.institutions) if (count(re, it._aff) || count(re, it._desc)) { bonus += 3; hits.push('Institution: ' + term); }
+  for (const {term, re} of P.people) if (count(re, it._people)) { bonus += 8; hits.push('Follows ' + term); }
+  for (const {term, re} of P.institutions) if (count(re, it._aff) || count(re, it._desc)) { bonus += 3; hits.push(term); }
   for (const {term, re} of P.negatives) if (count(re, it._title) || count(re, it._abs) || count(re, it._kw)) { bonus -= 8; hits.push('Excluded: ' + term); }
   it._own = total + bonus; it._why = why; it._hits = hits; it._pw = pw;
 }
 function scoreAll(){
-  computeGraphWeights();
-  const P = compile(profile);
+  computeGraphWeights(); const P = compile(profile);
   for (const it of items) scoreItem(it, P);
   maxScore = 1;
-  for (const it of items){
-    if (it.children && it.children.length){
-      const cs = it.children.map(c => byId.get(c)).filter(Boolean).map(c => c._own).sort((a,b)=>b-a).slice(0,3);
-      const m = cs.length ? cs.reduce((a,b)=>a+b,0)/cs.length : 0;
-      it._childBoost = 0.6*m; it._score = it._own + it._childBoost;
-    } else { it._childBoost = 0; it._score = it._own; }
-    if (it._score > maxScore) maxScore = it._score;
-  }
+  for (const it of items){ if (it.children && it.children.length){ const cs = it.children.map(c => byId.get(c)).filter(Boolean).map(c => c._own).sort((a,b)=>b-a).slice(0,3); const m = cs.length ? cs.reduce((a,b)=>a+b,0)/cs.length : 0; it._childBoost = 0.6*m; it._score = it._own + it._childBoost; } else { it._childBoost = 0; it._score = it._own; } if (it._score > maxScore) maxScore = it._score; }
+  const sorted = items.map(i => i._score).filter(s => s > 0).sort((a,b)=>b-a);
+  scoreAll.q90 = sorted[Math.floor(sorted.length*0.1)] || 1; scoreAll.q99 = sorted[Math.floor(sorted.length*0.01)] || 1;
 }
-// ---------- helpers ----------
+const fitOf = it => it._score <= 0 ? 0.15 : Math.min(1, 0.3 + 0.7 * Math.sqrt(it._score / scoreAll.q99));
+// ----- helpers -----
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmtTime = hm => { if(!hm) return ''; let [h,m] = hm.split(':').map(Number); const ap = h>=12?'pm':'am'; h = h%12 || 12; return `${h}:${String(m).padStart(2,'0')}${ap}`; };
-const fmtDay = d => DAYNAMES[d] || d || '';
+const fmtTime = hm => { if(!hm) return ''; let [h,m] = hm.split(':').map(Number); const ap = h>=12?' pm':' am'; h = h%12 || 12; return m ? `${h}:${String(m).padStart(2,'0')}${ap}` : `${h}${ap}`; };
+const fmtRange = (a,b) => { if(!a) return ''; const A = fmtTime(a), B = fmtTime(b); const sameAp = A.slice(-2) === B.slice(-2); return (sameAp ? A.slice(0,-3) : A) + '–' + B; };
 const isPoster = it => /poster/i.test(it.program||'') || /poster/i.test(it.ep_category||'');
-function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display='block'; clearTimeout(toast._t); toast._t = setTimeout(()=>t.style.display='none', 2400); }
-function download(name, text, type='text/plain'){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000); }
-function setDecision(id, d){ if (decisions[id] === d) delete decisions[id]; else decisions[id] = d; store.set('decisions', decisions); renderList(); renderStats(); if (selected === id) renderDetail(); if (tab==='cal') renderCal(); }
-function rescore(msg){ store.set('profile', profile); scoreAll(); renderList(); renderStats(); if (tab==='web') renderWeb(); if (tab==='profile') renderProfile(); if (msg) toast(msg); }
-// ---------- filters / list ----------
+const typeLabel = it => it.type === 'session' ? 'Session' : it.type === 'abstract' ? (isPoster(it) ? 'Poster' : 'Abstract') : 'Talk';
+function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display='block'; clearTimeout(toast._t); toast._t = setTimeout(()=>t.style.display='none', 2600); }
+function download(name, text, type='text/plain'){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 2000); }
+const STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6.2 6.7.8-5 4.6 1.3 6.7-5.9-3.4-5.9 3.4 1.3-6.7-5-4.6 6.7-.8z"/></svg>';
+const Q = '<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 110 18 9 9 0 010-18zm0 13.2a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4zM9 9.5a3 3 0 116 0c0 1.6-1.3 2.1-2 2.7-.5.4-1 .9-1 1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const X = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+function setDecision(id, d){ if (decisions[id] === d) delete decisions[id]; else decisions[id] = d; store.set('decisions', decisions); refreshAfterDecision(id); }
+function refreshAfterDecision(id){
+  renderStats();
+  if (view === 'picks') renderList(false);
+  if (view === 'plan') renderPlan();
+  const open = document.querySelector('#sheet.on [data-detail]') || document.querySelector('#dpanel [data-detail]');
+  if (open){ const oid = open.dataset.detail; if (oid === id || byId.get(oid)?.children?.includes(id)) renderDetailInto(open.parentElement, oid); }
+}
+function rescore(msg){ store.set('profile', profile); scoreAll(); renderAll(); if (msg) toast(msg); }
+// =====================================================================
+// Views
+// =====================================================================
+function switchView(v){ view = v; document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.id === 'v-'+v)); renderSubbar(); if (v==='picks') renderPicks(); if (v==='plan') renderPlan(); if (v==='web') renderWeb(); if (v==='me') renderMe(); window.scrollTo(0,0); }
+document.getElementById('nav').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) switchView(b.dataset.v); });
+function renderSubbar(){
+  const sb = document.getElementById('subbar');
+  if (view === 'picks' || view === 'plan'){
+    const dayList = view === 'plan' ? days.filter(d => items.some(i => i.date === d && (decisions[i.id]==='attend' || decisions[i.id]==='maybe'))) : days;
+    const cur = view === 'plan' ? (renderPlan.day && dayList.includes(renderPlan.day) ? renderPlan.day : 'all') : F.day;
+    sb.classList.remove('hide');
+    sb.innerHTML = `<button class="pill ${cur==='all'?'on':''}" data-day="all">${view==='plan'?'Whole meeting':'All days'}</button>` + dayList.map(d => `<button class="pill ${cur===d?'on':''}" data-day="${d}"><b>${esc(DAYNAMES[d][0])}</b> ${esc(DAYNAMES[d][1])}</button>`).join('');
+    sb.onclick = e => { const b = e.target.closest('[data-day]'); if (!b) return; if (view === 'plan'){ renderPlan.day = b.dataset.day; renderSubbar(); renderPlan(); } else { F.day = b.dataset.day; limit = 100; saveF(); renderSubbar(); renderList(true); } };
+  } else { sb.classList.add('hide'); sb.innerHTML = ''; }
+}
+function saveF(){ store.set('filters', F); }
+// ---------- Picks ----------
+function renderPicks(){
+  const v = document.getElementById('v-picks');
+  v.innerHTML = `<div class="searchrow"><div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="q" placeholder="Search titles, people, abstracts" value="${esc(F.q)}" autocomplete="off"></div><button class="btn" id="filterbtn">Filters <span class="badge hide" id="fcount"></span></button></div>
+    <div class="split"><div class="listwrap"><div id="listhead" class="legend" style="padding:0 16px 6px"></div><div class="list" id="list"></div></div><div id="dpanel"><div class="empty"><b>Pick an entry</b>Its abstract, people and fit show here.</div></div></div>`;
+  v.querySelector('#q').addEventListener('input', e => { F.q = e.target.value; limit = 100; saveF(); renderList(true); });
+  v.querySelector('#filterbtn').addEventListener('click', openFilters);
+  renderList(true);
+  if (selected && isDesk()) renderDetailInto(document.getElementById('dpanel'), selected);
+}
 function visible(){
-  const q = F.q.trim().toLowerCase();
-  const progSet = new Set(F.programs);
+  const q = F.q.trim().toLowerCase(); const progSet = new Set(F.programs);
   const arr = items.filter(it => {
     if (F.day !== 'all' && it.date !== F.day) return false;
     if (!F.types[it.type]) return false;
     if (progSet.size && !progSet.has(it.program)) return false;
     if (F.hidePosters && isPoster(it)) return false;
     if (it._score < F.minScore) return false;
-    if (F.sharedOnly && shared && !(shared.attend.has(it.id) || shared.maybe.has(it.id))) return false;
+    if (sharedOnly && shared && !(shared.attend.has(it.id) || shared.maybe.has(it.id))) return false;
     const d = decisions[it.id];
     if (F.decision === 'undecided' && d) return false;
     if (F.decision === 'chosen' && !(d === 'attend' || d === 'maybe')) return false;
@@ -334,468 +443,422 @@ function visible(){
   arr.sort(F.sort === 'time' ? byTime : (a,b) => (b._score - a._score) || byTime(a,b));
   return arr;
 }
-function renderSide(){
-  const s = document.getElementById('side');
-  s.innerHTML = `
-    <h3 class="sec">Search</h3>
-    <input type="search" id="q" placeholder="title, author, keyword, abstract…" value="${esc(F.q)}">
-    <h3 class="sec">Day</h3>
-    <div class="chips" id="daychips"><span class="chip ${F.day==='all'?'on':''}" data-day="all">All</span>${days.map(d=>`<span class="chip ${F.day===d?'on':''}" data-day="${d}">${esc(fmtDay(d))}</span>`).join('')}</div>
-    <h3 class="sec">Type</h3>
-    <label class="row"><input type="checkbox" data-type="session" ${F.types.session?'checked':''}> Sessions (${DATA.meta.by_type?.session ?? ''})</label>
-    <label class="row"><input type="checkbox" data-type="abstract" ${F.types.abstract?'checked':''}> Abstracts (${DATA.meta.by_type?.abstract ?? ''})</label>
-    <label class="row"><input type="checkbox" data-type="talk" ${F.types.talk?'checked':''}> Talks within sessions (${DATA.meta.by_type?.talk ?? ''})</label>
-    <label class="row"><input type="checkbox" id="hidePosters" ${F.hidePosters?'checked':''}> Hide posters</label>
-    ${shared ? `<label class="row"><input type="checkbox" id="sharedOnly" ${F.sharedOnly?'checked':''}> Only ${esc(shared.name)}'s picks</label>` : ''}
-    <h3 class="sec">Decision</h3>
-    <select id="decision">${['all','undecided','chosen','attend','maybe','skip'].map(v=>`<option value="${v}" ${F.decision===v?'selected':''}>${v==='all'?'All items':v==='chosen'?'Attend + maybe':v[0].toUpperCase()+v.slice(1)}</option>`).join('')}</select>
-    <h3 class="sec">Minimum score <span id="minScoreVal" style="float:right;color:var(--muted)">${F.minScore}</span></h3>
-    <input type="range" id="minScore" min="0" max="60" step="1" value="${F.minScore}" style="width:100%">
-    <h3 class="sec">Program <span style="float:right;font-weight:400;text-transform:none;letter-spacing:0"><a href="#" id="progAll">all</a> · <a href="#" id="progNone">none</a></span></h3>
-    <div class="chips" id="progchips">${programs.map(p=>`<span class="chip ${(!F.programs.length||F.programs.includes(p))?'on':''}" data-prog="${esc(p)}">${esc(p)}</span>`).join('')}</div>
-    <h3 class="sec">Export &amp; share</h3>
-    <div class="chips">
-      <button class="btn" id="exportIcs">Calendar (.ics)</button>
-      <button class="btn" id="exportCsv">Chosen (.csv)</button>
-      <button class="btn" id="shareLink">Share link</button>
-      <button class="btn" id="exportJson">Backup (.json)</button>
-      <button class="btn" id="importJson">Restore</button>
-    </div>
-    <input type="file" id="importFile" accept="application/json" style="display:none">
-    <p class="legend" style="margin-top:10px">Scores are relative to your interest profile. Decisions, notes and your profile are saved in this browser only, so anyone you send the app to keeps their own. Use Backup/Restore to move yours between devices, or Share link to show your picks to someone.</p>`;
-  s.querySelector('#q').addEventListener('input', e => { F.q = e.target.value; F.limit = 150; saveF(); renderList(); });
-  s.querySelector('#daychips').addEventListener('click', e => { const c = e.target.closest('.chip'); if(!c) return; F.day = c.dataset.day; saveF(); renderSide(); renderList(); });
-  s.querySelectorAll('input[data-type]').forEach(cb => cb.addEventListener('change', e => { F.types[e.target.dataset.type] = e.target.checked; saveF(); renderList(); }));
-  s.querySelector('#hidePosters').addEventListener('change', e => { F.hidePosters = e.target.checked; saveF(); renderList(); });
-  const so = s.querySelector('#sharedOnly'); if (so) so.addEventListener('change', e => { F.sharedOnly = e.target.checked; renderList(); });
-  s.querySelector('#decision').addEventListener('change', e => { F.decision = e.target.value; saveF(); renderList(); });
-  s.querySelector('#minScore').addEventListener('input', e => { F.minScore = +e.target.value; s.querySelector('#minScoreVal').textContent = F.minScore; saveF(); renderList(); });
-  s.querySelector('#progchips').addEventListener('click', e => { const c = e.target.closest('.chip'); if(!c) return; const p = c.dataset.prog; let set = F.programs.length ? new Set(F.programs) : new Set(programs); if (set.has(p)) set.delete(p); else set.add(p); F.programs = set.size === programs.length ? [] : [...set]; saveF(); renderSide(); renderList(); });
-  s.querySelector('#progAll').addEventListener('click', e => { e.preventDefault(); F.programs = []; saveF(); renderSide(); renderList(); });
-  s.querySelector('#progNone').addEventListener('click', e => { e.preventDefault(); F.programs = ['__none__']; saveF(); renderSide(); renderList(); });
-  s.querySelector('#exportIcs').addEventListener('click', () => exportIcs(true));
-  s.querySelector('#exportCsv').addEventListener('click', exportCsv);
-  s.querySelector('#shareLink').addEventListener('click', makeShareLink);
-  s.querySelector('#exportJson').addEventListener('click', () => download('ash2026-planner-backup.json', JSON.stringify({profile, decisions, notes, me, exported:new Date().toISOString()}, null, 1), 'application/json'));
-  s.querySelector('#importJson').addEventListener('click', () => s.querySelector('#importFile').click());
-  s.querySelector('#importFile').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; f.text().then(t => { try { const j = JSON.parse(t); if (j.profile) profile = j.profile; if (!profile.graph) profile.graph = JSON.parse(JSON.stringify(DEFAULT_PROFILE.graph)); if (j.decisions) decisions = j.decisions; if (j.notes) notes = j.notes; if (j.me) { me = j.me; store.set('me', me); } store.set('profile', profile); store.set('decisions', decisions); store.set('notes', notes); scoreAll(); renderAll(); toast('Restored'); } catch(err){ toast('Could not read file'); } }); });
-}
-function saveF(){ const {limit, sharedOnly, ...rest} = F; store.set('filters', rest); }
-function rowHtml(it){
+function entryHtml(it){
   const d = decisions[it.id] || '';
-  const seen = new Set();
-  const terms = it._why.flatMap(w => w.terms).filter(t => { const k = normKey(t); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
-  const gterms = (it._ghits||[]).filter(([t]) => !seen.has(normKey(gLabel[t])) && !gSeeds.has(t)).slice(0, 3).map(([t]) => gLabel[t]);
-  const sub = it.type !== 'session' && it.session_title ? `<div class="meta">in: ${esc(it.session_title)}</div>` : '';
-  const who = it.presenters && it.presenters.length ? `<div class="meta">${esc(it.presenters.slice(0,4).join(', '))}${it.presenters.length>4?` +${it.presenters.length-4}`:''}</div>` : '';
-  const sh = shared && (shared.attend.has(it.id) ? `<span class="chip small shared">★ ${esc(shared.name)}</span>` : shared.maybe.has(it.id) ? `<span class="chip small shared">? ${esc(shared.name)}</span>` : '');
-  const gpart = it._score > 0 ? Math.min(100, 100*(it._gscore*it._pw)/maxScore) : 0;
-  return `<div class="row-item ${d} ${selected===it.id?'sel':''}" data-id="${it.id}">
-    <div><div class="score">${it._score.toFixed(0)}<small>${it._childBoost?'incl. talks':''}</small></div><div class="bar"><i style="width:${Math.max(0, Math.min(100, 100*it._score/maxScore) - gpart).toFixed(0)}%"></i><b style="width:${gpart.toFixed(0)}%"></b></div></div>
-    <div>
-      <div class="title"><span class="type ${it.type}">${it.type==='abstract'?(it.number?'#'+esc(it.number):'abstract'):it.type}</span>${esc(it.title)}${it.cme?'<span class="cme">CME</span>':''}</div>
-      <div class="meta">${esc(fmtDay(it.date))} · ${esc(fmtTime(it.start))}–${esc(fmtTime(it.end))} · ${esc(it.location||'')} · ${esc(it.program||'')}</div>
-      ${sub}${who}
-      ${(terms.length || gterms.length || sh) ? `<div class="chips" style="margin-top:4px">${terms.map(t=>`<span class="chip small term">${esc(t)}</span>`).join('')}${gterms.map(t=>`<span class="chip small gterm" title="related keyword from the web">${esc(t)}</span>`).join('')}${it._hits.map(h=>`<span class="chip small">${esc(h)}</span>`).join('')}${sh||''}</div>` : ''}
+  const seen = new Set(); const terms = it._why.flatMap(w => w.terms).filter(t => { const k = normKey(t); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 3);
+  const rel = (it._ghits||[]).filter(([t]) => !seen.has(normKey(gLabel[t])) && !gSeeds.has(t)).slice(0, 2).map(([t]) => gLabel[t]);
+  const who = (it.presenters||[]).slice(0, 2).join(', ');
+  const sh = shared && (shared.attend.has(it.id) ? `<span class="chip pink">${esc(shared.name)} ★</span>` : shared.maybe.has(it.id) ? `<span class="chip pink">${esc(shared.name)} ?</span>` : '');
+  const tl = typeLabel(it);
+  return `<article class="entry ${d} ${selected===it.id?'sel':''}" data-id="${it.id}">
+    <div class="when"><span class="day">${esc(dayShort(it.date))}</span>${esc(fmtTime(it.start)).replace(' ','\u202f')}<span class="t2">${esc(fmtTime(it.end)).replace(' ','\u202f')}</span></div>
+    <div class="fit" title="fit ${it._score.toFixed(0)}"><i style="--f:${fitOf(it).toFixed(2)}"></i></div>
+    <div class="body"><h3>${esc(it.title)}</h3>
+      <p class="meta"><b>${esc(tl)}${it.number ? ' ' + esc(it.number) : ''}</b>${it.program && it.program !== tl ? ', ' + esc(it.program) : ''}${it.location ? ', ' + esc(it.location.replace(/^MCCNO - /, '')) : ''}${who ? '<br>' + esc(who) : ''}${it.cme ? '<br>CME credit' : ''}</p>
+      ${(terms.length || rel.length || sh) ? `<div class="chips">${terms.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}${rel.map(t=>`<span class="chip rel">${esc(t)}</span>`).join('')}${sh||''}</div>` : ''}
     </div>
-    <div class="decide" data-id="${it.id}">
-      <button class="attend ${d==='attend'?'on':''}" data-d="attend" title="Attend">★</button>
-      <button class="maybe ${d==='maybe'?'on':''}" data-d="maybe" title="Maybe">?</button>
-      <button class="skip ${d==='skip'?'on':''}" data-d="skip" title="Skip">✕</button>
-    </div></div>`;
+    <button class="quick" data-quick="${it.id}" aria-label="Attend">${STAR}</button></article>`;
 }
 let lastVisible = [];
-function renderList(){
-  const m = document.getElementById('main');
-  lastVisible = visible();
-  const shown = lastVisible.slice(0, F.limit);
-  m.innerHTML = `<div class="toolbar">
-      <span>Sort</span>
-      <select id="sort"><option value="score" ${F.sort==='score'?'selected':''}>by score</option><option value="time" ${F.sort==='time'?'selected':''}>by time</option></select>
-      <span class="count">${lastVisible.length.toLocaleString()} items · ${Object.values(decisions).filter(d=>d==='attend').length} attend · ${Object.values(decisions).filter(d=>d==='maybe').length} maybe</span>
-    </div>
-    ${shown.map(rowHtml).join('') || '<div class="empty">Nothing matches these filters.</div>'}
-    ${lastVisible.length > shown.length ? `<button class="more" id="more">Show more (${(lastVisible.length - shown.length).toLocaleString()} remaining)</button>` : ''}`;
-  m.querySelector('#sort').addEventListener('change', e => { F.sort = e.target.value; saveF(); renderList(); });
-  const moreBtn = m.querySelector('#more'); if (moreBtn) moreBtn.addEventListener('click', () => { F.limit += 150; renderList(); });
+function renderList(recount){
+  const el = document.getElementById('list'); if (!el) return;
+  if (recount || !lastVisible.length) lastVisible = visible();
+  const shown = lastVisible.slice(0, limit);
+  const head = document.getElementById('listhead'); if (head) head.innerHTML = profile.topics.length ? `${lastVisible.length.toLocaleString()} ${F.sort==='time'?'in time order':'by fit'}${F.day!=='all'?' on '+esc(dayShort(F.day)):''}${F.q?' matching “'+esc(F.q)+'”':''}` : `${lastVisible.length.toLocaleString()} entries. <a href="#" id="setupnow">Set up your interests</a> to rank them.`;
+  const sn = document.getElementById('setupnow'); if (sn) sn.addEventListener('click', e => { e.preventDefault(); openWizard(); });
+  el.innerHTML = (shown.map(entryHtml).join('') || `<div class="empty"><b>Nothing here</b>Try fewer filters or another day.</div>`) + (lastVisible.length > shown.length ? `<button class="more" id="more">Show ${Math.min(100, lastVisible.length - shown.length)} more of ${(lastVisible.length - shown.length).toLocaleString()}</button>` : '');
+  const fc = document.getElementById('fcount'); if (fc){ const n = (F.programs.length?1:0) + (F.hidePosters?1:0) + (F.decision!=='all'?1:0) + (F.minScore?1:0) + (!F.types.session||!F.types.abstract||!F.types.talk?1:0) + (F.sort==='time'?1:0); fc.textContent = n; fc.classList.toggle('hide', !n); }
+  const m = el.querySelector('#more'); if (m) m.addEventListener('click', () => { limit += 100; renderList(false); });
 }
-document.getElementById('main').addEventListener('click', e => {
-  const db = e.target.closest('.decide button'); if (db){ setDecision(db.parentElement.dataset.id, db.dataset.d); return; }
-  const row = e.target.closest('.row-item'); if (row){ selected = row.dataset.id; renderDetail(); document.querySelectorAll('.row-item.sel').forEach(r=>r.classList.remove('sel')); row.classList.add('sel'); }
+document.getElementById('v-picks').addEventListener('click', e => {
+  const q = e.target.closest('[data-quick]'); if (q && !e.target.closest('.talk')){ e.stopPropagation(); setDecision(q.dataset.quick, 'attend'); return; }
+  const row = e.target.closest('.entry'); if (row) openItem(row.dataset.id);
 });
-// ---------- detail ----------
-function highlight(text){
-  if (!text) return '';
-  let out = esc(text);
-  const P = compile(profile);
-  const terms = P.topics.flatMap(t => t.terms).concat(P.people, P.institutions);
-  for (const {re} of terms){ out = out.replace(new RegExp(re.source, 'gi'), m => `\u0001${m}\u0002`); }
-  return out.replace(/\u0001/g, '<mark>').replace(/\u0002/g, '</mark>');
+// ---------- Filters sheet ----------
+function openFilters(){
+  openSheet(`<div class="sh-head"><h2>Filters</h2><button class="btn sm quiet" data-close>Done</button></div><div class="sh-body" id="fbody"></div>`, true);
+  const b = document.getElementById('fbody');
+  const draw = () => { b.innerHTML = `
+    <div class="stack">
+      <div><div class="legend" style="margin-bottom:6px">Order</div><div class="seg"><button data-sort="score" class="${F.sort==='score'?'on':''}">Best fit first</button><button data-sort="time" class="${F.sort==='time'?'on':''}">By time</button></div></div>
+      <div><div class="legend" style="margin-bottom:6px">Show</div>
+        <label class="row"><input type="checkbox" data-type="session" ${F.types.session?'checked':''}> Sessions <span class="legend">${DATA.meta.by_type?.session ?? ''}</span></label>
+        <label class="row"><input type="checkbox" data-type="abstract" ${F.types.abstract?'checked':''}> Abstracts and posters <span class="legend">${DATA.meta.by_type?.abstract ?? ''}</span></label>
+        <label class="row"><input type="checkbox" data-type="talk" ${F.types.talk?'checked':''}> Talks inside sessions <span class="legend">${DATA.meta.by_type?.talk ?? ''}</span></label>
+        <label class="row"><input type="checkbox" id="hp" ${F.hidePosters?'checked':''}> Hide posters</label></div>
+      <div><div class="legend" style="margin-bottom:6px">Decision</div><select id="dec">${[['all','Everything'],['undecided','Not decided yet'],['chosen','Attend and maybe'],['attend','Attend'],['maybe','Maybe'],['skip','Skipped']].map(([v,l])=>`<option value="${v}" ${F.decision===v?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div><div class="legend" style="margin-bottom:6px">Minimum fit: <span id="msv">${F.minScore||'off'}</span></div><input type="range" id="ms" min="0" max="80" step="5" value="${F.minScore}" style="width:100%"></div>
+      <div><div class="legend" style="margin-bottom:6px">Program <button class="btn sm quiet" id="pall">all</button><button class="btn sm quiet" id="pnone">none</button></div><div class="chips" id="pch">${programs.map(p=>`<button class="pill ${(!F.programs.length||F.programs.includes(p))?'on':''}" data-prog="${esc(p)}">${esc(p)}</button>`).join('')}</div></div>
+    </div>`; };
+  draw();
+  b.addEventListener('click', e => {
+    const s = e.target.closest('[data-sort]'); if (s){ F.sort = s.dataset.sort; saveF(); draw(); renderList(true); return; }
+    const p = e.target.closest('[data-prog]'); if (p){ const pr = p.dataset.prog; let set = F.programs.length ? new Set(F.programs) : new Set(programs); if (set.has(pr)) set.delete(pr); else set.add(pr); F.programs = set.size === programs.length ? [] : [...set]; saveF(); draw(); renderList(true); return; }
+    if (e.target.id === 'pall'){ F.programs = []; saveF(); draw(); renderList(true); } if (e.target.id === 'pnone'){ F.programs = ['__none__']; saveF(); draw(); renderList(true); }
+  });
+  b.addEventListener('change', e => { const t = e.target; if (t.dataset.type){ F.types[t.dataset.type] = t.checked; } if (t.id === 'hp') F.hidePosters = t.checked; if (t.id === 'dec') F.decision = t.value; saveF(); renderList(true); });
+  b.addEventListener('input', e => { if (e.target.id === 'ms'){ F.minScore = +e.target.value; b.querySelector('#msv').textContent = F.minScore || 'off'; saveF(); renderList(true); } });
 }
-function renderDetail(){
-  const el = document.getElementById('detail');
-  const it = byId.get(selected);
-  if (!it){ el.innerHTML = '<div class="empty">Select an item to see details.</div>'; return; }
-  const d = decisions[it.id] || '';
+// ---------- Sheets ----------
+const sheetEl = document.getElementById('sheet'), backEl = document.getElementById('sheet-back');
+let sheetOpen = false;
+function openSheet(html, half){
+  sheetEl.className = 'sheet' + (half ? ' half' : ''); sheetEl.innerHTML = (half ? '<div class="grab"></div>' : '') + html;
+  backEl.classList.remove('hide'); void sheetEl.offsetHeight; backEl.classList.add('on'); sheetEl.classList.add('on');
+  document.body.style.overflow = 'hidden';
+  if (!sheetOpen){ history.pushState({sheet:1}, ''); sheetOpen = true; }
+}
+function closeSheet(fromPop){ if (!sheetOpen) return; sheetOpen = false; sheetEl.classList.remove('on'); backEl.classList.remove('on'); document.body.style.overflow = ''; setTimeout(() => { backEl.classList.add('hide'); sheetEl.innerHTML = ''; }, 280); if (!fromPop && history.state && history.state.sheet) history.back(); }
+window.addEventListener('popstate', () => { if (sheetOpen) closeSheet(true); });
+backEl.addEventListener('click', () => closeSheet());
+sheetEl.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeSheet(); });
+// ---------- Detail ----------
+function openItem(id){
+  selected = id;
+  if (isDesk() && view === 'picks'){ renderDetailInto(document.getElementById('dpanel'), id); document.querySelectorAll('.entry').forEach(r => r.classList.toggle('sel', r.dataset.id === id)); return; }
+  openSheet(`<div class="sh-head"><button class="iconbtn" data-close aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 id="shtitle"></h2></div><div class="sh-body" id="dbody"></div><div class="sh-foot" id="dfoot"></div>`);
+  renderDetailInto(document.getElementById('dbody'), id);
+}
+function highlight(text){ if (!text) return ''; let out = esc(text); const P = compile(profile); for (const {re} of P.topics.flatMap(t => t.terms).concat(P.people, P.institutions)){ out = out.replace(new RegExp(re.source, 'gi'), m => `\u0001${m}\u0002`); } return out.replace(/\u0001/g, '<mark>').replace(/\u0002/g, '</mark>'); }
+function decideHtml(id){ const d = decisions[id]||''; return `<div class="decide" data-decide="${id}"><button class="attend ${d==='attend'?'on':''}" data-d="attend">${STAR} Attend</button><button class="maybe ${d==='maybe'?'on':''}" data-d="maybe">${Q} Maybe</button><button class="skip ${d==='skip'?'on':''}" data-d="skip">${X} Skip</button></div>`; }
+function renderDetailInto(container, id){
+  const it = byId.get(id); if (!it || !container) return;
   const parent = it.parent_id ? byId.get(it.parent_id) : null;
-  const kids = (it.children||[]).map(c => byId.get(c)).filter(Boolean);
+  const kids = (it.children||[]).map(c => byId.get(c)).filter(Boolean).sort((a,b)=>((a._min??0)-(b._min??0))||(b._score-a._score));
   const authors = (it.authors||[]).map(a => `${a.presenting?'<b>':''}${esc(a.name)}${a.presenting?'</b>':''}${a.affil?.length?`<sup>${esc(a.affil.join(','))}</sup>`:''}`).join(', ');
   const affs = Object.entries(it.affiliations||{}).map(([k,v]) => `<div><sup>${esc(k)}</sup> ${esc(v)}</div>`).join('');
-  const parts = (it.participants||[]).map(p => `<div><b>${esc(p.role)}:</b> ${esc(p.name)}</div>`).join('');
-  const why = it._why.map(w => `<div class="why"><b>${esc(w.topic)}</b> +${w.points.toFixed(1)} — ${esc(w.terms.join(', '))}</div>`).join('')
-    + (it._gscore ? `<div class="why"><b>Keyword web</b> +${it._gscore.toFixed(1)} — ${esc((it._ghits||[]).map(([t,w]) => gLabel[t] + (gSeeds.has(t)?'':'*')).join(', '))} <span class="legend">(* related keyword)</span></div>` : '')
-    + it._hits.map(h=>`<div class="why">${esc(h)}</div>`).join('') + (it._pw !== 1 ? `<div class="why">Program weight ×${it._pw}</div>` : '') + (it._childBoost ? `<div class="why">Talks in this session +${it._childBoost.toFixed(1)}</div>` : '');
-  const sh = shared && (shared.attend.has(it.id) ? `<div class="why"><span class="chip small shared">★ ${esc(shared.name)} plans to attend</span></div>` : shared.maybe.has(it.id) ? `<div class="why"><span class="chip small shared">? ${esc(shared.name)}: maybe</span></div>` : '');
-  el.innerHTML = `
-    <div class="decide" data-id="${it.id}" style="float:right">
-      <button class="attend ${d==='attend'?'on':''}" data-d="attend" title="Attend">★</button>
-      <button class="maybe ${d==='maybe'?'on':''}" data-d="maybe" title="Maybe">?</button>
-      <button class="skip ${d==='skip'?'on':''}" data-d="skip" title="Skip">✕</button>
-    </div>
-    <div><span class="type ${it.type}">${it.type}</span>${it.number?`<span class="type">#${esc(it.number)}</span>`:''}${it.cme?'<span class="cme">CME</span>':''}</div>
-    <h2>${highlight(it.title)}</h2>
+  const parts = (it.participants||[]).map(p => `<div>${esc(p.name)} <span class="legend">${esc(p.role.toLowerCase())}</span></div>`).join('');
+  const why = it._why.map(w => `<div class="why"><b>${esc(w.topic)}</b> ${esc(w.terms.join(', '))} <span class="legend">+${w.points.toFixed(0)}</span></div>`).join('')
+    + (it._gscore > 0.5 ? `<div class="why"><b>Related keywords</b> ${esc((it._ghits||[]).filter(([t])=>!gSeeds.has(t)).map(([t]) => gLabel[t]).slice(0,6).join(', '))} <span class="legend">+${it._gscore.toFixed(0)}</span></div>` : '')
+    + it._hits.map(h=>`<div class="why">${esc(h)}</div>`).join('') + (it._childBoost ? `<div class="why"><b>Talks inside</b> raise this session <span class="legend">+${it._childBoost.toFixed(0)}</span></div>` : '');
+  const sh = shared && (shared.attend.has(it.id) ? `<div class="why"><span class="mark-dot pink"></span>${esc(shared.name)} plans to attend</div>` : shared.maybe.has(it.id) ? `<div class="why"><span class="mark-dot pink"></span>${esc(shared.name)}: maybe</div>` : '');
+  const inSheet = container.id === 'dbody';
+  container.innerHTML = `<div data-detail="${it.id}">
+    <div class="legend">${esc(typeLabel(it))}${it.number?' '+esc(it.number):''}${it.cme?', CME credit':''}</div>
+    <h1 class="d-title">${highlight(it.title)}</h1>
     ${sh||''}
-    <div class="kv">
-      <b>When</b><div>${esc(fmtDay(it.date))} (${esc(it.date||'')}) · ${esc(fmtTime(it.start))}–${esc(fmtTime(it.end))} Central</div>
-      <b>Where</b><div>${esc(it.location||'—')}</div>
-      <b>Program</b><div>${esc(it.program||'')}${it.ep_category && it.ep_category!==it.program?` <span class="legend">(${esc(it.ep_category)})</span>`:''}</div>
-      ${parent ? `<b>Session</b><div><a href="#" data-open="${parent.id}">${esc(parent.title)}</a> <span class="legend">${esc(fmtTime(parent.start))}–${esc(fmtTime(parent.end))}</span></div>` : ''}
-      <b>Score</b><div>${it._score.toFixed(1)}</div>
-      <b>Links</b><div>${it.ash_url?`<a href="${esc(it.ash_url)}" target="_blank" rel="noopener">ASH program</a>`:''} ${it.ep_url?`· <a href="${esc(it.ep_url)}" target="_blank" rel="noopener">EventPilot app</a>`:''}</div>
-    </div>
-    ${why ? `<h3 class="sec">Why it scored</h3>${why}` : ''}
-    ${parts ? `<h3 class="sec">Participants</h3>${parts}` : ''}
-    ${authors ? `<h3 class="sec">Authors</h3><div>${authors}</div>${affs?`<div class="legend" style="margin-top:4px">${affs}</div>`:''}` : ''}
-    ${!parts && !authors && it.ep_speakers?.length ? `<h3 class="sec">Speakers</h3><div>${esc(it.ep_speakers.join(', '))}</div>` : ''}
-    ${it.abstract ? `<h3 class="sec">Abstract</h3><div class="abstract">${highlight(it.abstract)}</div>` : ''}
-    ${it.description ? `<h3 class="sec">Session description</h3><div class="abstract">${highlight(it.description)}</div>` : ''}
-    ${!it.description && it.ep_description ? `<h3 class="sec">Description (app)</h3><div class="abstract">${highlight(stripDisclosures(it.ep_description))}</div>` : ''}
-    ${it.keywords?.length ? `<h3 class="sec">Keywords</h3><div class="chips">${it.keywords.map(k=>`<span class="chip small">${esc(k)}</span>`).join('')}</div>` : ''}
-    ${kids.length ? `<h3 class="sec">${kids.length} talks / abstracts in this session</h3>${kids.slice().sort((a,b)=>((a._min??0)-(b._min??0))||(b._score-a._score)).map(k => `<div class="child" data-open="${k.id}"><div class="t">${isPoster(k)?('#'+esc(k.number||'')):esc(fmtTime(k.start))}</div><div>${esc(k.title)}<div class="t">${esc((k.presenters||[])[0]||'')} · score ${k._score.toFixed(0)}</div></div><div class="decide" data-id="${k.id}"><button class="attend ${decisions[k.id]==='attend'?'on':''}" data-d="attend">★</button><button class="maybe ${decisions[k.id]==='maybe'?'on':''}" data-d="maybe">?</button><button class="skip ${decisions[k.id]==='skip'?'on':''}" data-d="skip">✕</button></div></div>`).join('')}` : ''}
-    ${it.disclosures ? `<h3 class="sec">Disclosures</h3><div class="legend">${esc(it.disclosures)}</div>` : ''}
-    <h3 class="sec">My notes</h3>
-    <textarea id="note" rows="3" placeholder="Why this matters, questions to ask, people to meet…">${esc(notes[it.id]||'')}</textarea>`;
-  el.querySelector('#note').addEventListener('input', e => { if (e.target.value.trim()) notes[it.id] = e.target.value; else delete notes[it.id]; store.set('notes', notes); });
+    <div class="d-when"><span class="k">When</span><span><span class="big">${esc(dayLong(it.date))}</span><br>${esc(fmtRange(it.start, it.end))} Central</span><span class="k">Where</span><span>${esc(it.location||'—')}</span><span class="k">Program</span><span>${esc(it.program||'')}</span>${parent?`<span class="k">Session</span><span><a href="#" data-open="${parent.id}">${esc(parent.title)}</a> <span class="legend">${esc(fmtRange(parent.start,parent.end))}</span></span>`:''}<span class="k">Fit</span><span>${it._score.toFixed(0)}${it._score >= scoreAll.q99 ? ', among the top 1%' : it._score >= scoreAll.q90 ? ', top 10%' : ''}</span></div>
+    ${!inSheet ? decideHtml(it.id) : ''}
+    ${why ? `<div class="d-sec"><h4>Why it fits</h4>${why}</div>` : ''}
+    ${parts ? `<div class="d-sec"><h4>People</h4>${parts}</div>` : ''}
+    ${authors ? `<div class="d-sec"><h4>Authors</h4><div>${authors}</div>${affs?`<div class="legend" style="margin-top:4px">${affs}</div>`:''}</div>` : ''}
+    ${!parts && !authors && it.ep_speakers?.length ? `<div class="d-sec"><h4>Speakers</h4><div>${esc(it.ep_speakers.join(', '))}</div></div>` : ''}
+    ${it.abstract ? `<div class="d-sec"><h4>Abstract</h4><div class="d-abs">${highlight(it.abstract)}</div></div>` : ''}
+    ${it.description ? `<div class="d-sec"><h4>About this session</h4><div class="d-abs">${highlight(it.description)}</div></div>` : ''}
+    ${!it.description && it.ep_description ? `<div class="d-sec"><h4>Description</h4><div class="d-abs">${highlight(stripDisclosures(it.ep_description))}</div></div>` : ''}
+    ${kids.length ? `<div class="d-sec"><h4>${kids.length} ${isPoster(it)?'posters':'talks'} in this session</h4>${kids.map(k => `<div class="talk ${decisions[k.id]||''}" data-open="${k.id}"><div class="t">${isPoster(k)?esc(k.number||''):esc(fmtTime(k.start))}</div><div>${esc(k.title)}<div class="s">${esc((k.presenters||[])[0]||'')}, fit ${k._score.toFixed(0)}</div></div><button class="quick" data-quick="${k.id}" aria-label="Attend">${STAR}</button></div>`).join('')}</div>` : ''}
+    ${it.keywords?.length ? `<div class="d-sec"><h4>ASH keywords</h4><div class="chips">${it.keywords.map(k=>`<span class="chip tag">${esc(k)}</span>`).join('')}</div></div>` : ''}
+    <div class="d-sec"><h4>Your notes</h4><textarea id="note" placeholder="Questions to ask, people to meet, why it matters">${esc(notes[it.id]||'')}</textarea></div>
+    <div class="d-sec rowbtns">${it.ash_url?`<a class="btn sm" href="${esc(it.ash_url)}" target="_blank" rel="noopener">Open on ASH site</a>`:''}${it.ep_url?`<a class="btn sm" href="${esc(it.ep_url)}" target="_blank" rel="noopener">Open in ASH app</a>`:''}</div>
+  </div>`;
+  container.querySelector('#note').addEventListener('input', e => { if (e.target.value.trim()) notes[it.id] = e.target.value; else delete notes[it.id]; store.set('notes', notes); });
+  if (inSheet){ document.getElementById('dfoot').innerHTML = decideHtml(it.id); document.getElementById('shtitle').textContent = (parent ? 'In: ' + parent.title : (it.session_title || typeLabel(it))).slice(0, 80); container.scrollTop = 0; }
 }
-document.getElementById('detail').addEventListener('click', e => {
-  const db = e.target.closest('.decide button'); if (db){ e.stopPropagation(); setDecision(db.parentElement.dataset.id, db.dataset.d); return; }
-  const o = e.target.closest('[data-open]'); if (o){ e.preventDefault(); selected = o.dataset.open; renderDetail(); }
-});
-// ---------- profile editor ----------
-function renderProfile(){
-  const el = document.getElementById('detail');
-  const t = profile; const g = t.graph || DEFAULT_PROFILE.graph;
-  el.innerHTML = `
-    <h2 style="margin-top:0">Interest profile</h2>
-    <p class="legend">Each topic is a list of terms (one per line or comma-separated). A term scores when it appears in a title (3), keywords (2), session title (1.5), abstract (1–2) or description (1), summed per topic and multiplied by the topic weight. The keyword web adds points for related keywords that co-occur with yours. Program weights scale the total; people and institutions add a bonus; excluded terms subtract.</p>
-    <div id="topics">${t.topics.map((tp,i)=>topicHtml(tp,i)).join('')}</div>
-    <button class="btn" id="addTopic">+ Add topic</button>
-    <h3 class="sec">Keyword web</h3>
-    <div class="slider"><span>Influence on scores (0 = off)</span><input type="number" id="gStrength" step="0.1" min="0" max="3" value="${g.strength ?? 1}"></div>
-    <div class="slider"><span>Spread to neighbours (α)</span><input type="number" id="gAlpha" step="0.05" min="0" max="1" value="${g.alpha ?? 0.35}"></div>
-    <div class="slider"><span>Hops</span><input type="number" id="gHops" step="1" min="0" max="3" value="${g.hops ?? 2}"></div>
-    <div class="legend">Muted keywords: ${(g.muted||[]).map(m=>esc(m)).join(', ') || 'none'} (manage them in the Keyword web tab)</div>
-    <h3 class="sec">People to follow (one per line)</h3><textarea id="people" rows="3">${esc((t.people||[]).join('\n'))}</textarea>
-    <h3 class="sec">Institutions (matched in affiliations)</h3><textarea id="insts" rows="2">${esc((t.institutions||[]).join('\n'))}</textarea>
-    <h3 class="sec">Exclude terms (penalize)</h3><textarea id="negs" rows="2">${esc((t.negatives||[]).join('\n'))}</textarea>
-    <h3 class="sec">Program weights</h3>
-    <div class="pw">${programs.map(p=>`<span>${esc(p)}</span><input type="number" step="0.1" min="0" max="3" data-pw="${esc(p)}" value="${t.programWeights?.[p] ?? 1}">`).join('')}</div>
-    <div style="display:flex;gap:6px;margin-top:14px;flex-wrap:wrap">
-      <button class="btn primary" id="apply">Apply &amp; rescore</button>
-      <button class="btn" id="exportProfile">Export profile</button>
-      <button class="btn danger" id="resetProfile">Reset to defaults</button>
-    </div>`;
-  el.querySelector('#addTopic').addEventListener('click', () => { readProfileForm(); profile.topics.push({name:'New topic', weight:3, terms:[]}); renderProfile(); });
-  el.querySelector('#topics').addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (b){ readProfileForm(); profile.topics.splice(+b.dataset.del, 1); renderProfile(); } });
-  el.querySelector('#apply').addEventListener('click', () => { readProfileForm(); rescore('Rescored'); });
-  el.querySelector('#exportProfile').addEventListener('click', () => { readProfileForm(); download('ash2026-interests.json', JSON.stringify(profile, null, 1), 'application/json'); });
-  el.querySelector('#resetProfile').addEventListener('click', () => { if (!confirm('Replace your interest profile with the defaults?')) return; profile = JSON.parse(JSON.stringify(DEFAULT_PROFILE)); rescore(); });
+for (const host of [sheetEl, document.getElementById('v-picks'), document.getElementById('v-web')]) host.addEventListener('click', e => {
+  const db = e.target.closest('[data-decide] button'); if (db){ e.stopPropagation(); setDecision(db.closest('[data-decide]').dataset.decide, db.dataset.d); return; }
+  const q = e.target.closest('.talk [data-quick]'); if (q){ e.stopPropagation(); setDecision(q.dataset.quick, 'attend'); return; }
+  const o = e.target.closest('[data-open]'); if (o){ e.preventDefault(); e.stopPropagation(); const id = o.dataset.open; selected = id; const body = document.getElementById('dbody'); if (body && sheetOpen) renderDetailInto(body, id); else openItem(id); }
+}, true);
+// ---------- Plan ----------
+function chosenItems(includeMaybe){ return items.filter(it => decisions[it.id] === 'attend' || (includeMaybe && decisions[it.id] === 'maybe')); }
+function isAncestor(a, b){ let p = b.parent_id; while (p){ if (p === a.id) return true; p = byId.get(p)?.parent_id; } return false; }
+function overlaps(a, b){ return a.date === b.date && a._min != null && b._min != null && a._min < b._max && b._min < a._max; }
+function conflictsFor(list){ const bad = new Set(); for (let i=0;i<list.length;i++) for (let j=i+1;j<list.length;j++){ const a = list[i], b = list[j]; if (!overlaps(a,b) || isAncestor(a,b) || isAncestor(b,a) || (a._group && a._group === b._group)) continue; if (decisions[a.id] !== 'attend' || decisions[b.id] !== 'attend') continue; bad.add(a.id); bad.add(b.id); } return bad; }
+function calendarEvents(includeMaybe){
+  const ch = chosenItems(includeMaybe); const groups = new Map(); const evs = [];
+  for (const it of ch){ if (isPoster(it) && it.type !== 'session' && it.parent_id){ const g = groups.get(it.parent_id) || {posters:[], parent: byId.get(it.parent_id)}; g.posters.push(it); groups.set(it.parent_id, g); } else evs.push(it); }
+  for (const [pid, g] of groups){ const p = g.parent; if (p && ch.includes(p)) { p._posters = g.posters; continue; } const ev = Object.assign(Object.create(null), p || {}, {id:'grp-'+pid, title:(p?.title||'Poster session'), _posters:g.posters, _group:'grp-'+pid, _isGroup:true}); ev.date = p?.date || g.posters[0].date; ev._min = p?._min ?? g.posters[0]._min; ev._max = p?._max ?? g.posters[0]._max; ev.start = p?.start||g.posters[0].start; ev.end = p?.end||g.posters[0].end; ev.location = p?.location||g.posters[0].location; decisions[ev.id] = g.posters.some(x=>decisions[x.id]==='attend') ? 'attend' : 'maybe'; evs.push(ev); }
+  return evs;
 }
-function topicHtml(tp, i){
-  return `<div class="topic" data-i="${i}">
-    <div class="head"><input type="checkbox" data-en ${tp.enabled===false?'':'checked'} title="enabled"><input type="text" data-name value="${esc(tp.name)}" placeholder="Topic name"><select data-w>${[1,2,3,4,5].map(w=>`<option ${(+tp.weight||1)===w?'selected':''} value="${w}">×${w}</option>`).join('')}</select><button class="btn danger" data-del="${i}" title="Remove">✕</button></div>
-    <textarea data-terms placeholder="terms, one per line or comma-separated">${esc((tp.terms||[]).join('\n'))}</textarea></div>`;
+function renderPlan(){
+  const v = document.getElementById('v-plan');
+  const includeMaybe = store.get('calMaybe', true);
+  const evs = calendarEvents(includeMaybe).filter(e => e.date && e._min != null).sort((a,b)=>(a.date.localeCompare(b.date))||(a._min-b._min));
+  const conf = conflictsFor(evs);
+  const dayList = days.filter(d => evs.some(e => e.date === d));
+  const cur = renderPlan.day && dayList.includes(renderPlan.day) ? renderPlan.day : 'all';
+  const showDays = cur === 'all' ? dayList : [cur];
+  let html = `<div class="section-h">Your plan<small>${evs.length ? `${evs.filter(e=>decisions[e.id]==='attend').length} to attend, ${evs.filter(e=>decisions[e.id]==='maybe').length} maybe` : 'Nothing picked yet'}</small></div>
+    <div class="rowbtns" style="padding:0 16px 8px"><button class="btn sm primary" id="addcal">Add to calendar</button><button class="btn sm" id="printbtn">Print list</button><label class="row" style="border:0;padding:0 4px;font-size:14px"><input type="checkbox" id="calMaybe" ${includeMaybe?'checked':''}> include maybe</label></div>`;
+  if (conf.size) html += `<div class="conflict-note">${conf.size} entries you plan to attend overlap. They are outlined below.</div>`;
+  if (!evs.length) html += `<div class="empty"><b>Your plan is empty</b>Mark entries with the star in Picks and they appear here, day by day, with conflicts flagged.</div>`;
+  html += `<div class="agenda">`;
+  for (const d of showDays){
+    const dayEvs = evs.filter(e => e.date === d);
+    html += `<div class="aday">${esc(dayLong(d))}<small>${dayEvs.length} ${dayEvs.length===1?'entry':'entries'}</small></div>`;
+    let prevEnd = null;
+    for (const e of dayEvs){
+      if (prevEnd != null && e._min - prevEnd >= 60) html += `<div class="gap">${Math.floor((e._min - prevEnd)/60)} h free</div>`;
+      prevEnd = Math.max(prevEnd ?? 0, e._max);
+      html += `<div class="aitem ${decisions[e.id]==='maybe'?'maybe':''} ${conf.has(e.id)?'conflict':''}" data-ev="${esc(e.id)}"><div class="t"><b>${esc(fmtTime(e.start))}</b>${esc(fmtTime(e.end))}</div><div><h3>${esc(e.title)}${e._posters?` <span class="legend">${e._posters.length} poster${e._posters.length>1?'s':''}</span>`:''}</h3><div class="meta">${esc((e.location||'').replace(/^MCCNO - /,''))}${e.program?', '+esc(e.program):''}${decisions[e.id]==='maybe'?', maybe':''}${conf.has(e.id)?', overlaps':''}</div>${e._posters?`<ul>${e._posters.map(p=>`<li data-ev="${esc(p.id)}">${esc(p.number||'')} ${esc(p.title)}</li>`).join('')}</ul>`:''}</div></div>`;
+    }
+  }
+  html += `</div>`;
+  const gridDays = showDays.length ? showDays : days.slice(2, 7); const H0 = 7, H1 = 21;
+  html += `<div class="grid" style="--days:${gridDays.length};--hours:${H1-H0}"><div class="dayhead"></div>${gridDays.map(d=>`<div class="dayhead">${esc(dayShort(d))}</div>`).join('')}<div class="gcol">${Array.from({length:H1-H0},(_,i)=>`<div class="hr" style="top:${i*56}px">${fmtTime(String(H0+i).padStart(2,'0')+':00')}</div>`).join('')}</div>`;
+  for (const d of gridDays){
+    const dayEvs = evs.filter(e => e.date === d).sort((a,b)=>a._min-b._min || b._max-a._max); const cols = []; const placed = [];
+    for (const e of dayEvs){ let c = 0; while (cols[c] && cols[c] > e._min) c++; cols[c] = e._max; placed.push({e, c}); }
+    for (const p of placed){ const ov = placed.filter(q => overlaps(q.e, p.e)); p.n = Math.max(1, ...ov.map(q=>q.c+1)); }
+    html += `<div class="gcol">${Array.from({length:H1-H0},(_,i)=>`<div class="hr" style="top:${i*56}px"></div>`).join('')}${placed.map(({e,c,n}) => { const top = Math.max(0, (e._min - H0*60)*56/60), h = Math.max(22, (Math.min(e._max, H1*60) - Math.max(e._min, H0*60))*56/60); return `<div class="ev ${decisions[e.id]||'maybe'} ${conf.has(e.id)?'conflict':''}" data-ev="${esc(e.id)}" style="top:${top}px;height:${h-2}px;left:calc(${(100/n)*c}% + 2px);width:calc(${100/n}% - 5px)"><div class="t">${esc(fmtRange(e.start,e.end))}</div><div>${esc(e.title)}</div><div class="loc">${esc((e.location||'').replace(/^MCCNO - /,''))}</div></div>`; }).join('')}</div>`;
+  }
+  html += `</div>`;
+  v.innerHTML = html;
+  v.querySelector('#calMaybe').addEventListener('change', e => { store.set('calMaybe', e.target.checked); renderPlan(); });
+  v.querySelector('#addcal').addEventListener('click', openCalendarSheet);
+  v.querySelector('#printbtn').addEventListener('click', () => { const w = window.open('', '_blank'); w.document.write(`<title>ASH 2026 plan</title><style>body{font:14px -apple-system,Helvetica,Arial;padding:24px;max-width:720px}h3{margin:18px 0 6px;font-weight:600}p{margin:4px 0}small{color:#666}</style>` + showDays.map(d => `<h3>${esc(dayLong(d))}</h3>` + evs.filter(e=>e.date===d).map(e => `<p><b>${esc(fmtRange(e.start,e.end))}</b> ${esc(e.title)}${decisions[e.id]==='maybe'?' (maybe)':''}<br><small>${esc(e.location||'')}</small>${e._posters?'<br><small>'+e._posters.map(p=>esc(p.number+' '+p.title)).join('<br>')+'</small>':''}</p>`).join('')).join('')); w.document.close(); w.print(); });
+  v.onclick = e => { const t = e.target.closest('[data-ev]'); if (!t) return; e.stopPropagation(); let id = t.dataset.ev; if (id.startsWith('grp-')) id = id.slice(4); if (byId.has(id)) openItem(id); };
 }
-function readProfileForm(){
-  const el = document.getElementById('detail');
-  if (!el.querySelector('#topics')) return;
-  const topics = [...el.querySelectorAll('.topic')].map(t => ({
-    name: t.querySelector('[data-name]').value.trim() || 'Topic', weight: +t.querySelector('[data-w]').value, enabled: t.querySelector('[data-en]').checked,
-    terms: t.querySelector('[data-terms]').value.split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean)
-  }));
-  const lines = id => el.querySelector(id).value.split(/\n+/).map(s=>s.trim()).filter(Boolean);
-  const pw = {}; el.querySelectorAll('[data-pw]').forEach(i => { pw[i.dataset.pw] = +i.value; });
-  const g = Object.assign({}, profile.graph || DEFAULT_PROFILE.graph, {strength: +el.querySelector('#gStrength').value, alpha: +el.querySelector('#gAlpha').value, hops: +el.querySelector('#gHops').value});
-  profile = {topics, people: lines('#people'), institutions: lines('#insts'), negatives: lines('#negs'), programWeights: pw, graph: g};
+function openCalendarSheet(){
+  openSheet(`<div class="sh-head"><h2>Add to your calendar</h2><button class="btn sm quiet" data-close>Done</button></div><div class="sh-body stack">
+    <p>Download a calendar file with your picks, then open it in your calendar app. Times are set in Central time, so they shift correctly if your phone is in another zone.</p>
+    <div class="rowbtns"><button class="btn primary" id="icsA">Attend only</button><button class="btn" id="icsAM">Attend and maybe</button></div>
+    <div><b>Outlook</b><div class="legend">On the web: Add calendar, then Upload from file. On desktop: File, Open &amp; Export, Import/Export, Import an iCalendar (.ics) file, then choose Import to merge into your calendar.</div></div>
+    <div><b>Google Calendar</b><div class="legend">Settings, Import &amp; export, select the file. On a phone, open the file and choose Google Calendar.</div></div>
+    <div><b>Apple Calendar</b><div class="legend">Open the downloaded file; on iPhone, tap it in Files or Mail and choose Add All.</div></div>
+    <p class="legend">Importing again after changes updates the same events in most apps, since each one keeps a stable identifier. Every event carries the room, presenters, the first lines of the abstract and a link to the ASH page.</p></div>`, true);
+  document.getElementById('icsA').addEventListener('click', () => exportIcs(false));
+  document.getElementById('icsAM').addEventListener('click', () => exportIcs(true));
 }
-// ---------- keyword web ----------
-let webSel = null, webNodes = [], webEdges = [], webAnim = null, webQuery = '';
-function addTermToInterests(label){
-  let t = profile.topics.find(x => x.name === 'From keyword web');
-  if (!t){ t = {name:'From keyword web', weight:3, terms:[]}; profile.topics.push(t); }
-  if (!t.terms.some(x => normKey(x) === normKey(label))) t.terms.push(label);
-  profile.graph.muted = (profile.graph.muted||[]).filter(m => normKey(m) !== normKey(label));
-  rescore(`Added "${label}" to interests`);
+// ---------- ICS (Outlook-friendly: VTIMEZONE, METHOD:PUBLISH, folded lines) ----------
+const icsEsc = s => String(s||'').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/[,;]/g, m => '\\'+m);
+const fold = line => { const out = []; let s = line; while (s.length > 72){ out.push(s.slice(0, 72)); s = ' ' + s.slice(72); } out.push(s); return out.join('\r\n'); };
+const icsLocal = (date, hm) => date.replace(/-/g,'') + 'T' + hm.replace(':','') + '00';
+function exportIcs(includeMaybe){
+  const evs = calendarEvents(includeMaybe).filter(e => e.date && e.start && e.end);
+  if (!evs.length){ toast('Nothing marked yet'); return; }
+  const stamp = new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  const L = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//ASH 2026 Planner//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:ASH 2026 ' + (me ? me + "'s" : 'my') + ' picks','X-WR-TIMEZONE:America/Chicago',
+    'BEGIN:VTIMEZONE','TZID:America/Chicago','BEGIN:STANDARD','DTSTART:19701101T020000','RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU','TZOFFSETFROM:-0500','TZOFFSETTO:-0600','TZNAME:CST','END:STANDARD','BEGIN:DAYLIGHT','DTSTART:19700308T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU','TZOFFSETFROM:-0600','TZOFFSETTO:-0500','TZNAME:CDT','END:DAYLIGHT','END:VTIMEZONE'];
+  for (const e of evs){
+    const d = decisions[e.id] === 'maybe' ? 'Maybe: ' : '';
+    let desc = [e.program, e.session_title ? 'Session: ' + e.session_title : '', (e.presenters||[]).length ? 'Presenters: ' + e.presenters.slice(0,8).join(', ') : ''].filter(Boolean).join('\n');
+    if (e._posters) desc += '\nPosters:\n' + e._posters.map(p => `${p.number||''} ${p.title} — ${(p.presenters||[])[0]||''}`).join('\n');
+    if (e.abstract) desc += '\n\n' + e.abstract.slice(0, 500) + (e.abstract.length > 500 ? '…' : '');
+    if (notes[e.id]) desc += '\n\nNotes: ' + notes[e.id];
+    if (e.ash_url) desc += '\n' + e.ash_url;
+    L.push('BEGIN:VEVENT', `UID:ash2026-${e.id}@planner`, `DTSTAMP:${stamp}`, `SEQUENCE:${Math.floor(Date.now()/60000) % 100000}`, `DTSTART;TZID=America/Chicago:${icsLocal(e.date, e.start)}`, `DTEND;TZID=America/Chicago:${icsLocal(e.date, e.end)}`,
+      `SUMMARY:${icsEsc(d + (e.number && !e._isGroup ? e.number + ' ' : '') + e.title)}`, `LOCATION:${icsEsc(e.location||'')}`, `DESCRIPTION:${icsEsc(desc)}`, e.ash_url ? `URL:${e.ash_url}` : '', 'TRANSP:OPAQUE', 'END:VEVENT');
+  }
+  L.push('END:VCALENDAR');
+  download('ash2026-' + (me ? me.replace(/\W+/g,'-').toLowerCase() + '-' : '') + 'plan.ics', L.filter(Boolean).map(fold).join('\r\n'), 'text/calendar;charset=utf-8');
+  toast('Calendar file downloaded');
 }
-function removeTermFromInterests(label){
-  for (const t of profile.topics) t.terms = t.terms.filter(x => normKey(x) !== normKey(label));
-  profile.topics = profile.topics.filter(t => t.name !== 'From keyword web' || t.terms.length);
-  rescore(`Removed "${label}"`);
-}
-function muteTerm(label){ profile.graph.muted = profile.graph.muted || []; if (!profile.graph.muted.some(m => normKey(m) === normKey(label))) profile.graph.muted.push(label); for (const t of profile.topics) t.terms = t.terms.filter(x => normKey(x) !== normKey(label)); rescore(`Muted "${label}"`); }
-function unmuteTerm(label){ profile.graph.muted = (profile.graph.muted||[]).filter(m => normKey(m) !== normKey(label)); rescore(`Unmuted "${label}"`); }
+// ---------- Keyword web ----------
+let webSel = null, webNodes = [], webEdges = [], webAnim = null, webQuery = '', mapOn = false;
+function addTermToInterests(label){ let t = profile.topics.find(x => x.name === 'From the keyword web'); if (!t){ t = {name:'From the keyword web', weight:3, terms:[]}; profile.topics.push(t); } if (!t.terms.some(x => normKey(x) === normKey(label))) t.terms.push(label); profile.graph.muted = (profile.graph.muted||[]).filter(m => normKey(m) !== normKey(label)); rescore(`Added “${label}”`); }
+function removeTermFromInterests(label){ for (const t of profile.topics) t.terms = t.terms.filter(x => normKey(x) !== normKey(label)); profile.topics = profile.topics.filter(t => t.name !== 'From the keyword web' || t.terms.length); rescore(`Removed “${label}”`); }
+function muteTerm(label){ profile.graph.muted = profile.graph.muted || []; if (!profile.graph.muted.some(m => normKey(m) === normKey(label))) profile.graph.muted.push(label); for (const t of profile.topics) t.terms = t.terms.filter(x => normKey(x) !== normKey(label)); rescore(`Muted “${label}”`); }
+function unmuteTerm(label){ profile.graph.muted = (profile.graph.muted||[]).filter(m => normKey(m) !== normKey(label)); rescore(`Unmuted “${label}”`); }
 function itemsWithTerm(t, n){ return items.filter(it => it._gt.includes(t) || it._gb.includes(t)).sort((a,b)=>b._score-a._score).slice(0, n); }
 function renderWeb(){
-  const el = document.getElementById('web');
-  if (!G){ el.innerHTML = '<div class="empty" style="grid-column:1/-1">No keyword graph file (data/graph.js) was found.</div>'; return; }
+  const v = document.getElementById('v-web');
+  if (!G){ v.innerHTML = '<div class="empty"><b>No keyword web</b>The data/graph.js file is missing.</div>'; return; }
+  if (!profile.topics.length){ v.innerHTML = `<div class="empty"><b>Build your interest web first</b>Tell the planner what you care about and it maps the keywords that travel together across ${G.n_items.toLocaleString()} talks and abstracts.<div style="margin-top:14px"><button class="btn primary" id="wizgo">Set up my interests</button></div></div>`; v.querySelector('#wizgo').addEventListener('click', openWizard); return; }
   const muted = new Set((profile.graph.muted||[]).map(normKey));
-  const ranked = [];
-  for (let i = 0; i < GN; i++) if (gWeight[i] >= G_FLOOR) ranked.push(i);
+  const ranked = []; for (let i = 0; i < GN; i++) if (gWeight[i] >= G_FLOOR) ranked.push(i);
   ranked.sort((a,b) => gWeight[b] - gWeight[a] || G.terms[b].df - G.terms[a].df);
-  const derived = ranked.filter(i => !gSeeds.has(i));
-  const seeds = ranked.filter(i => gSeeds.has(i));
-  const q = webQuery.trim().toLowerCase();
-  const found = q ? G.terms.filter(t => t.label.toLowerCase().includes(q)).sort((a,b)=>b.df-a.df).slice(0, 25) : [];
-  const kwRow = (i) => { const t = G.terms[i]; const isSeed = gSeeds.has(i); const isMuted = muted.has(normKey(t.label));
-    return `<div class="kw ${isSeed?'seed':''} ${isMuted?'muted':''}" data-t="${i}"><span><a href="#" data-sel="${i}">${esc(t.label)}</a> <span class="w">${t.kind==='taxonomy'?'ASH keyword · ':''}${t.df} items${gWeight[i]>0?` · w ${gWeight[i].toFixed(2)}`:''}</span></span>
-      ${isSeed ? `<button class="btn tiny" data-rm="${i}" title="Remove from interests">−</button>` : `<button class="btn tiny" data-add="${i}" title="Add to interests">+</button>`}
-      ${isMuted ? `<button class="btn tiny" data-unmute="${i}" title="Unmute">unmute</button>` : `<button class="btn tiny" data-mute="${i}" title="Mute: never let this keyword add points">mute</button>`}</div>`; };
-  el.innerHTML = `
-    <div>
-      <h3 class="sec">Find a keyword</h3>
-      <input type="search" id="kwq" placeholder="e.g. treg, cmv, flow cytometry" value="${esc(webQuery)}">
-      ${found.length ? `<div style="margin-top:6px">${found.map(t=>kwRow(t.id)).join('')}</div>` : (q ? '<div class="legend" style="margin-top:6px">no keyword contains that text</div>' : '')}
-      <h3 class="sec">Your seed keywords (${seeds.length} matched in the corpus)</h3>
-      <div class="legend">Interest terms that exist as nodes in the web. Terms not listed here still score by text matching.</div>
-      ${seeds.map(i=>kwRow(i)).join('') || '<div class="legend">none</div>'}
-    </div>
-    <div id="webmain"><canvas id="webcanvas"></canvas>
-      <div style="position:absolute;left:10px;top:8px;font-size:12px;color:var(--muted);pointer-events:none">Drag nodes · click to inspect · size = weight · amber = your terms, blue = related, grey = muted</div></div>
-    <div>
-      <h3 class="sec">Related keywords the web suggests (${derived.length})</h3>
-      <div class="legend">Co-occur with your terms across ${G.n_items.toLocaleString()} items. They already add points (weight shown); add one to make it a full interest term, or mute it.</div>
-      ${derived.slice(0, 60).map(i=>kwRow(i)).join('')}
-      <div id="webdetail"></div>
+  const derived = ranked.filter(i => !gSeeds.has(i)), seeds = ranked.filter(i => gSeeds.has(i));
+  const q = webQuery.trim().toLowerCase(); const found = q ? G.terms.filter(t => t.label.toLowerCase().includes(q)).sort((a,b)=>b.df-a.df).slice(0, 20) : [];
+  const kwRow = i => { const t = G.terms[i]; const isSeed = gSeeds.has(i), isMuted = muted.has(normKey(t.label));
+    return `<div class="kw ${isSeed?'seed':''} ${isMuted?'muted':''}"><span><a href="#" data-sel="${i}">${esc(t.label)}</a><span class="w">${t.df.toLocaleString()} items${!isSeed && gWeight[i]>0?`, weight ${gWeight[i].toFixed(1)}`:''}${t.kind==='taxonomy'?', ASH tag':''}</span></span>
+      ${isSeed ? `<button data-rm="${i}" class="on" title="Remove from interests">Yours</button>` : `<button data-add="${i}" title="Add to interests">Add</button>`}
+      ${isMuted ? `<button data-unmute="${i}">Unmute</button>` : `<button data-mute="${i}" title="Never let this keyword add points">Mute</button>`}</div>`; };
+  v.innerHTML = `<div class="section-h">Keyword web<small>${seeds.length} of your terms are in the web and ${derived.length} related keywords were picked up.</small></div>
+    <div class="rowbtns" style="padding:0 16px 8px"><button class="btn sm ${mapOn?'primary':''}" id="maptoggle">${mapOn?'Hide map':'Show map'}</button></div>
+    <div id="mapwrap" class="${mapOn?'on':''}"><canvas id="map"></canvas><div id="mapnote">Drag to move, tap a keyword to inspect. Purple are yours, blue are related.</div></div>
+    <div class="webgrid">
+      <div><div class="searchrow" style="padding:10px 16px"><div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="kwq" placeholder="Find a keyword" value="${esc(webQuery)}"></div></div>
+        ${found.length ? found.map(t=>kwRow(t.id)).join('') : (q ? '<div class="empty">No keyword contains that.</div>' : '')}
+        <div class="section-h" style="font-size:18px">Your keywords</div>${seeds.map(kwRow).join('') || '<div class="empty">None of your terms match a keyword node yet; they still score by text.</div>'}</div>
+      <div><div id="webdetail"></div></div>
+      <div><div class="section-h" style="font-size:18px">Related keywords<small>They already add points. Add one to make it a full interest, or mute it.</small></div>${derived.slice(0, 60).map(kwRow).join('')}</div>
     </div>`;
-  el.querySelector('#kwq').addEventListener('input', e => { webQuery = e.target.value; renderWeb(); const v = el.querySelector('#kwq'); v.focus(); v.setSelectionRange(v.value.length, v.value.length); });
-  el.onclick = e => {
+  v.querySelector('#kwq').addEventListener('input', e => { webQuery = e.target.value; renderWeb(); const i = v.querySelector('#kwq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); });
+  v.querySelector('#maptoggle').addEventListener('click', () => { mapOn = !mapOn; renderWeb(); });
+  v.onclick = e => {
     const a = e.target.closest('[data-add]'); if (a){ addTermToInterests(gLabel[+a.dataset.add]); return; }
     const r = e.target.closest('[data-rm]'); if (r){ removeTermFromInterests(gLabel[+r.dataset.rm]); return; }
     const m = e.target.closest('[data-mute]'); if (m){ muteTerm(gLabel[+m.dataset.mute]); return; }
     const u = e.target.closest('[data-unmute]'); if (u){ unmuteTerm(gLabel[+u.dataset.unmute]); return; }
-    const s = e.target.closest('[data-sel]'); if (s){ e.preventDefault(); webSel = +s.dataset.sel; renderWebDetail(); if (!webNodes.some(n => n.id === webSel)) buildWebLayout(seeds, derived); drawWeb(); return; }
-    const o = e.target.closest('[data-open]'); if (o){ e.preventDefault(); selected = o.dataset.open; switchTab('rank'); renderDetail(); }
+    const s = e.target.closest('[data-sel]'); if (s){ e.preventDefault(); webSel = +s.dataset.sel; renderWebDetail(); if (!webNodes.some(n => n.id === webSel)) buildMap(seeds, derived); drawMap(); const d = v.querySelector('#webdetail'); if (!isDesk()) d.scrollIntoView({behavior:'smooth', block:'start'}); return; }
   };
-  buildWebLayout(seeds, derived);
+  if (mapOn || isDesk()) buildMap(seeds, derived);
   renderWebDetail();
 }
 function renderWebDetail(){
   const d = document.getElementById('webdetail'); if (!d) return;
-  if (webSel == null){ d.innerHTML = ''; return; }
-  const t = G.terms[webSel];
-  const nb = gNb[webSel].slice().sort((a,b)=>b[1]-a[1]).slice(0, 15);
-  d.innerHTML = `<h3 class="sec">${esc(t.label)}</h3><div class="legend">${t.df} items · weight ${(gWeight[webSel]||0).toFixed(2)}${gSeeds.has(webSel)?' · your term':''}</div>
-    <div class="chips" style="margin:6px 0">${gSeeds.has(webSel)?`<button class="btn tiny" data-rm="${webSel}">remove from interests</button>`:`<button class="btn tiny" data-add="${webSel}">+ add to interests</button>`} <button class="btn tiny" data-mute="${webSel}">mute</button></div>
-    <div class="legend">Linked keywords</div><div class="chips" style="margin:4px 0 8px">${nb.map(([b,w])=>`<a href="#" class="chip small ${gSeeds.has(b)?'term':'gterm'}" data-sel="${b}" title="link strength ${w}">${esc(gLabel[b])}</a>`).join('')}</div>
-    <div class="legend">Top items with this keyword</div>${itemsWithTerm(webSel, 8).map(it=>`<div class="child" data-open="${it.id}"><div class="t">${it._score.toFixed(0)}</div><div>${esc(it.title)}<div class="t">${esc(fmtDay(it.date))} · ${esc(it.program||'')}</div></div><div></div></div>`).join('')}`;
+  if (webSel == null){ d.innerHTML = isDesk() ? '<div class="empty"><b>Tap a keyword</b>See what it links to and the best entries that mention it.</div>' : ''; return; }
+  const t = G.terms[webSel]; const nb = gNb[webSel].slice().sort((a,b)=>b[1]-a[1]).slice(0, 14);
+  d.innerHTML = `<div class="section-h" style="font-size:20px">${esc(t.label)}<small>${t.df.toLocaleString()} items, weight ${(gWeight[webSel]||0).toFixed(1)}${gSeeds.has(webSel)?', one of yours':''}</small></div>
+    <div class="rowbtns" style="padding:0 16px 10px">${gSeeds.has(webSel)?`<button class="btn sm" data-rm="${webSel}">Remove from interests</button>`:`<button class="btn sm primary" data-add="${webSel}">Add to interests</button>`}<button class="btn sm" data-mute="${webSel}">Mute</button></div>
+    <div style="padding:0 16px"><div class="legend">Travels with</div><div class="chips" style="margin:6px 0 12px">${nb.map(([b,w])=>`<a href="#" class="chip ${gSeeds.has(b)?'':'rel'}" data-sel="${b}">${esc(gLabel[b])}</a>`).join('')}</div><div class="legend">Best entries with this keyword</div></div>
+    ${itemsWithTerm(webSel, 8).map(it=>`<div class="talk" data-open="${it.id}" style="padding:8px 16px"><div class="t">${it._score.toFixed(0)}</div><div>${esc(it.title)}<div class="s">${esc(dayShort(it.date))}, ${esc(it.program||'')}</div></div><span></span></div>`).join('')}`;
 }
-function buildWebLayout(seeds, derived){
-  const canvas = document.getElementById('webcanvas'); if (!canvas) return;
-  const ids = seeds.slice(0, 50).concat(derived.slice(0, 70));
-  if (webSel != null && !ids.includes(webSel)) ids.push(webSel);
-  const idx = new Map(ids.map((id, i) => [id, i]));
-  const W = canvas.parentElement.clientWidth || 600, H = canvas.parentElement.clientHeight || 500;
+function buildMap(seeds, derived){
+  const canvas = document.getElementById('map'); if (!canvas || !canvas.offsetParent) return;
+  const ids = seeds.slice(0, 40).concat(derived.slice(0, 60)); if (webSel != null && !ids.includes(webSel)) ids.push(webSel);
+  const idx = new Map(ids.map((id, i) => [id, i])); const W = canvas.parentElement.clientWidth || 600, H = canvas.parentElement.clientHeight || 500;
   const old = new Map(webNodes.map(n => [n.id, n]));
-  webNodes = ids.map((id, i) => { const o = old.get(id); const ang = i / ids.length * Math.PI * 2; const r = Math.min(W, H) * 0.35;
-    return {id, x: o ? o.x : W/2 + r*Math.cos(ang), y: o ? o.y : H/2 + r*Math.sin(ang), vx:0, vy:0, w: gWeight[id] || 0.2, seed: gSeeds.has(id), fixed: o ? o.fixed : false}; });
-  webEdges = [];
-  for (const n of webNodes) for (const [b, w] of gNb[n.id]) if (idx.has(b) && idx.get(b) > idx.get(n.id)) webEdges.push([idx.get(n.id), idx.get(b), w]);
+  webNodes = ids.map((id, i) => { const o = old.get(id); const ang = i / ids.length * Math.PI * 2; const r = Math.min(W, H) * 0.36; return {id, x: o ? o.x : W/2 + r*Math.cos(ang), y: o ? o.y : H/2 + r*Math.sin(ang), vx:0, vy:0, w: gWeight[id] || 0.2, seed: gSeeds.has(id), fixed: o ? o.fixed : false}; });
+  webEdges = []; for (const n of webNodes) for (const [b, w] of gNb[n.id]) if (idx.has(b) && idx.get(b) > idx.get(n.id)) webEdges.push([idx.get(n.id), idx.get(b), w]);
   let steps = 0;
-  const tick = () => {
-    const k = 0.02, rep = 9000, damp = 0.8;
+  const tick = () => { const k = 0.025, rep = Math.min(5000, W*H/140), damp = 0.8;
     for (const a of webNodes){ a.fx = (W/2 - a.x) * 0.0012; a.fy = (H/2 - a.y) * 0.0012; }
-    for (let i = 0; i < webNodes.length; i++) for (let j = i+1; j < webNodes.length; j++){
-      const a = webNodes[i], b = webNodes[j]; let dx = b.x - a.x, dy = b.y - a.y; let d2 = dx*dx + dy*dy + 0.01; if (d2 > 360000) continue;
-      const f = rep / d2; const d = Math.sqrt(d2); dx /= d; dy /= d; a.fx -= dx*f; a.fy -= dy*f; b.fx += dx*f; b.fy += dy*f; }
-    for (const [i, j, w] of webEdges){ const a = webNodes[i], b = webNodes[j]; const dx = b.x - a.x, dy = b.y - a.y; const d = Math.sqrt(dx*dx+dy*dy)+0.01; const target = 90 + 140*(1-w); const f = k * (d - target) * (0.2 + w); a.fx += dx/d*f; a.fy += dy/d*f; b.fx -= dx/d*f; b.fy -= dy/d*f; }
-    for (const a of webNodes){ if (a.fixed) continue; a.vx = (a.vx + a.fx) * damp; a.vy = (a.vy + a.fy) * damp; a.x = Math.max(20, Math.min(W-20, a.x + a.vx)); a.y = Math.max(20, Math.min(H-20, a.y + a.vy)); }
-    drawWeb();
-    if (++steps < 240) webAnim = requestAnimationFrame(tick);
-  };
-  if (webAnim) cancelAnimationFrame(webAnim);
-  webAnim = requestAnimationFrame(tick);
-  let drag = null;
+    for (let i = 0; i < webNodes.length; i++) for (let j = i+1; j < webNodes.length; j++){ const a = webNodes[i], b = webNodes[j]; let dx = b.x - a.x, dy = b.y - a.y; let d2 = dx*dx + dy*dy + 0.01; if (d2 > 360000) continue; const f = rep / d2; const d = Math.sqrt(d2); dx /= d; dy /= d; a.fx -= dx*f; a.fy -= dy*f; b.fx += dx*f; b.fy += dy*f; }
+    for (const [i, j, w] of webEdges){ const a = webNodes[i], b = webNodes[j]; const dx = b.x - a.x, dy = b.y - a.y; const d = Math.sqrt(dx*dx+dy*dy)+0.01; const target = Math.min(W, H) * (0.1 + 0.16*(1-w)); const f = k * (d - target) * (0.2 + w); a.fx += dx/d*f; a.fy += dy/d*f; b.fx -= dx/d*f; b.fy -= dy/d*f; }
+    for (const a of webNodes){ if (a.fixed) continue; a.vx = (a.vx + a.fx) * damp; a.vy = (a.vy + a.fy) * damp; a.x = Math.max(40, Math.min(W-120, a.x + a.vx)); a.y = Math.max(24, Math.min(H-24, a.y + a.vy)); }
+    drawMap(); if (++steps < 220) webAnim = requestAnimationFrame(tick); };
+  if (webAnim) cancelAnimationFrame(webAnim); webAnim = requestAnimationFrame(tick);
+  let drag = null, moved = false;
   const pos = ev => { const r = canvas.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
-  const hit = (x, y) => { let best = null, bd = 1e9; for (const n of webNodes){ const d = Math.hypot(n.x - x, n.y - y); const rr = 4 + 3.5*n.w; if (d < rr + 4 && d < bd){ best = n; bd = d; } } return best; };
-  canvas.onmousedown = ev => { const [x, y] = pos(ev); const n = hit(x, y); if (n){ drag = n; n.fixed = true; n._x0 = x; n._y0 = y; } };
-  canvas.onmousemove = ev => { const [x, y] = pos(ev); if (drag){ drag.x = x; drag.y = y; drawWeb(); return; } const h = hit(x, y); canvas.style.cursor = h ? 'pointer' : 'grab'; canvas.title = h ? gLabel[h.id] : ''; };
-  canvas.onmouseup = ev => { const [x, y] = pos(ev); if (drag){ const n = drag; drag = null; if (Math.hypot(n._x0 - x, n._y0 - y) < 3){ webSel = n.id; renderWebDetail(); drawWeb(); } } };
-  canvas.onmouseleave = () => { drag = null; };
+  const hit = (x, y) => { let best = null, bd = 1e9; for (const n of webNodes){ const d = Math.hypot(n.x - x, n.y - y); const rr = 3 + 2.2*n.w; if (d < rr + 10 && d < bd){ best = n; bd = d; } } return best; };
+  canvas.onpointerdown = ev => { const [x, y] = pos(ev); const n = hit(x, y); if (n){ drag = n; n.fixed = true; moved = false; canvas.setPointerCapture(ev.pointerId); } };
+  canvas.onpointermove = ev => { if (!drag) return; const [x, y] = pos(ev); if (Math.hypot(drag.x - x, drag.y - y) > 3) moved = true; drag.x = x; drag.y = y; drawMap(); };
+  canvas.onpointerup = () => { if (drag){ const n = drag; drag = null; if (!moved){ webSel = n.id; renderWebDetail(); drawMap(); } } };
+  canvas.onpointercancel = () => { drag = null; };
 }
-function drawWeb(){
-  const canvas = document.getElementById('webcanvas'); if (!canvas) return;
+function drawMap(){
+  const canvas = document.getElementById('map'); if (!canvas || !canvas.offsetParent) return;
   const W = canvas.parentElement.clientWidth, H = canvas.parentElement.clientHeight; const dpr = window.devicePixelRatio || 1;
   if (canvas.width !== W*dpr || canvas.height !== H*dpr){ canvas.width = W*dpr; canvas.height = H*dpr; }
   const ctx = canvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
   const muted = new Set((profile.graph.muted||[]).map(normKey));
-  for (const [i, j, w] of webEdges){ const a = webNodes[i], b = webNodes[j]; const hl = webSel != null && (a.id === webSel || b.id === webSel); ctx.strokeStyle = hl ? 'rgba(138,28,28,.7)' : `rgba(90,110,140,${0.08 + 0.35*w})`; ctx.lineWidth = hl ? 1.6 : 0.6 + 1.6*w; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
-  for (const n of webNodes){ const r = 4 + 3.5*n.w; const isM = muted.has(normKey(gLabel[n.id]));
-    ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2); ctx.fillStyle = isM ? '#c4c9ce' : n.seed ? '#f2b544' : '#7fa8d9'; ctx.fill();
-    if (n.id === webSel){ ctx.lineWidth = 2.5; ctx.strokeStyle = '#8a1c1c'; ctx.stroke(); } }
-  ctx.font = '11px -apple-system, Helvetica, Arial'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.85)';
-  for (const n of webNodes){ const r = 4 + 3.5*n.w; const lbl = gLabel[n.id]; const t = lbl.length > 26 ? lbl.slice(0, 25) + '…' : lbl;
-    ctx.strokeText(t, n.x + r + 3, n.y); ctx.fillStyle = n.seed ? '#1b1f24' : '#33414f'; ctx.fillText(t, n.x + r + 3, n.y); }
+  for (const [i, j, w] of webEdges){ const a = webNodes[i], b = webNodes[j]; const hl = webSel != null && (a.id === webSel || b.id === webSel); ctx.strokeStyle = hl ? 'rgba(91,63,160,.75)' : `rgba(120,110,150,${0.07 + 0.3*w})`; ctx.lineWidth = hl ? 1.6 : 0.6 + 1.4*w; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+  for (const n of webNodes){ const r = 3 + 2.2*n.w; const isM = muted.has(normKey(gLabel[n.id])); ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2); ctx.fillStyle = isM ? '#d3cfdc' : n.seed ? '#5b3fa0' : '#8fb0d9'; ctx.fill(); if (n.id === webSel){ ctx.lineWidth = 3; ctx.strokeStyle = '#d4607f'; ctx.stroke(); } }
+  ctx.font = '12px Atkinson Hyperlegible, -apple-system, Helvetica, Arial'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.9)';
+  for (const n of webNodes){ const r = 3 + 2.2*n.w; const lbl = gLabel[n.id]; const t = lbl.length > 24 ? lbl.slice(0, 23) + '…' : lbl; ctx.strokeText(t, n.x + r + 3, n.y); ctx.fillStyle = n.seed ? '#241f2e' : '#4e4760'; ctx.fillText(t, n.x + r + 3, n.y); }
 }
-// ---------- calendar ----------
-function chosenItems(includeMaybe){ return items.filter(it => decisions[it.id] === 'attend' || (includeMaybe && decisions[it.id] === 'maybe')); }
-function isAncestor(a, b){ let p = b.parent_id; while (p){ if (p === a.id) return true; p = byId.get(p)?.parent_id; } return false; }
-function overlaps(a, b){ return a.date === b.date && a._min != null && b._min != null && a._min < b._max && b._min < a._max; }
-function conflictsFor(list){
-  const bad = new Set();
-  for (let i=0;i<list.length;i++) for (let j=i+1;j<list.length;j++){
-    const a = list[i], b = list[j];
-    if (!overlaps(a,b)) continue;
-    if (isAncestor(a,b) || isAncestor(b,a)) continue;
-    if (a._group && a._group === b._group) continue;
-    if (decisions[a.id] !== 'attend' || decisions[b.id] !== 'attend') continue;
-    bad.add(a.id); bad.add(b.id);
-  }
-  return bad;
+// ---------- Me ----------
+function renderMe(){
+  const v = document.getElementById('v-me');
+  const nAttend = Object.values(decisions).filter(d=>d==='attend').length, nMaybe = Object.values(decisions).filter(d=>d==='maybe').length;
+  v.innerHTML = `<div class="me">
+    <div class="section-h">${esc(me || 'You')}<small>${nAttend} to attend, ${nMaybe} maybe, ${Object.keys(notes).length} notes. Saved in this browser only.</small></div>
+    <div class="stack" style="padding:4px 16px 16px">
+      <div class="rowbtns"><button class="btn" id="setname">${me?'Change name':'Set your name'}</button><button class="btn primary" id="wiz">${profile.topics.length?'Rebuild my interest web':'Set up my interests'}</button></div>
+      <div class="section-h" style="padding-left:0;font-size:19px">Interests<small>${profile.topics.length} topics, ${profile.topics.reduce((a,t)=>a+(t.terms||[]).length,0)} terms. Scores update when you apply changes.</small></div>
+      <div id="editor"></div>
+      <div class="section-h" style="padding-left:0;font-size:19px">Share and back up</div>
+      <div class="rowbtns"><button class="btn" id="share">Share my picks</button><button class="btn" id="backup">Back up</button><button class="btn" id="restore">Restore</button><input type="file" id="restorefile" accept="application/json" class="hide"></div>
+      <p class="legend">A share link carries your attend and maybe picks plus your interests. Whoever opens it sees them alongside their own, which stay untouched. Back up saves everything to a file you can restore on another device.</p>
+      <p class="legend">${(DATA.meta.items||0).toLocaleString()} entries and ${(DATA.meta.with_abstract||0).toLocaleString()} abstracts from the ASH online program and the meeting app, built ${esc((DATA.meta.generated||'').slice(0,10))}.</p>
+    </div></div>`;
+  v.querySelector('#setname').addEventListener('click', askName);
+  v.querySelector('#wiz').addEventListener('click', openWizard);
+  v.querySelector('#share').addEventListener('click', makeShareLink);
+  v.querySelector('#backup').addEventListener('click', () => download('ash2026-planner-backup.json', JSON.stringify({profile, decisions, notes, me, exported:new Date().toISOString()}, null, 1), 'application/json'));
+  v.querySelector('#restore').addEventListener('click', () => v.querySelector('#restorefile').click());
+  v.querySelector('#restorefile').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; f.text().then(t => { try { const j = JSON.parse(t); if (j.profile) profile = j.profile; if (!profile.graph) profile.graph = {strength:1, alpha:.35, hops:2, muted:[]}; if (j.decisions) decisions = j.decisions; if (j.notes) notes = j.notes; if (j.me){ me = j.me; store.set('me', me); } store.set('decisions', decisions); store.set('notes', notes); firstRun = false; rescore('Restored'); } catch(err){ toast('That file could not be read'); } }); });
+  renderEditor();
 }
-function calendarEvents(includeMaybe){
-  const ch = chosenItems(includeMaybe);
-  const groups = new Map(); const evs = [];
-  for (const it of ch){
-    if (isPoster(it) && it.type !== 'session' && it.parent_id){
-      const g = groups.get(it.parent_id) || {posters:[], parent: byId.get(it.parent_id)};
-      g.posters.push(it); groups.set(it.parent_id, g);
-    } else evs.push(it);
-  }
-  for (const [pid, g] of groups){
-    const p = g.parent;
-    if (p && ch.includes(p)) { p._posters = g.posters; continue; }
-    const ev = Object.assign(Object.create(null), p || {}, {id:'grp-'+pid, title:(p?.title||'Poster session') + ' — ' + g.posters.length + ' poster' + (g.posters.length>1?'s':''), _posters:g.posters, _group:'grp-'+pid, _isGroup:true});
-    ev.date = p?.date || g.posters[0].date; ev._min = p?._min ?? g.posters[0]._min; ev._max = p?._max ?? g.posters[0]._max; ev.start = p?.start||g.posters[0].start; ev.end = p?.end||g.posters[0].end; ev.location = p?.location||g.posters[0].location;
-    decisions[ev.id] = g.posters.some(x=>decisions[x.id]==='attend') ? 'attend' : 'maybe';
-    evs.push(ev);
-  }
-  return evs;
+function askName(){ const vv = prompt('Your name (used in share links and the calendar file):', me || ''); if (vv !== null){ me = vv.trim(); store.set('me', me); renderWho(); if (view==='me') renderMe(); } }
+function renderEditor(){
+  const el = document.getElementById('editor'); if (!el) return; const t = profile, g = t.graph;
+  el.innerHTML = `<div id="topics">${t.topics.map((tp,i)=>`<div class="topic" data-i="${i}"><div class="head"><input type="checkbox" data-en ${tp.enabled===false?'':'checked'} title="On"><input type="text" data-name value="${esc(tp.name)}" placeholder="Topic"><select data-w>${[1,2,3,4,5].map(w=>`<option ${(+tp.weight||1)===w?'selected':''} value="${w}">×${w}</option>`).join('')}</select><button class="btn sm danger" data-del="${i}">Remove</button></div><textarea data-terms placeholder="terms, one per line or comma-separated">${esc((tp.terms||[]).join('\n'))}</textarea></div>`).join('')}</div>
+    <button class="btn sm" id="addTopic">Add a topic</button>
+    <div class="stack" style="margin-top:14px">
+      <div><div class="legend">People to follow, one per line</div><textarea id="people" rows="2">${esc((t.people||[]).join('\n'))}</textarea></div>
+      <div><div class="legend">Institutions, matched in affiliations</div><textarea id="insts" rows="2">${esc((t.institutions||[]).join('\n'))}</textarea></div>
+      <div><div class="legend">Exclude, subtracts points</div><textarea id="negs" rows="2">${esc((t.negatives||[]).join('\n'))}</textarea></div>
+      <div><div class="legend">Keyword web: influence, spread, hops</div><div class="rowbtns"><input type="number" id="gS" step="0.1" min="0" max="3" value="${g.strength ?? 1}" style="width:90px"><input type="number" id="gA" step="0.05" min="0" max="1" value="${g.alpha ?? .35}" style="width:90px"><input type="number" id="gH" step="1" min="0" max="3" value="${g.hops ?? 2}" style="width:90px"></div><div class="legend">Muted: ${(g.muted||[]).map(esc).join(', ')||'none'}</div></div>
+      <details><summary class="legend" style="cursor:pointer">Program weights</summary><div class="pw" style="margin-top:8px">${programs.map(p=>`<span>${esc(p)}</span><input type="number" step="0.1" min="0" max="3" data-pw="${esc(p)}" value="${t.programWeights?.[p] ?? 1}">`).join('')}</div></details>
+      <div class="rowbtns"><button class="btn primary" id="apply">Apply changes</button><button class="btn" id="example">Load example (transplant &amp; cell therapy)</button><button class="btn danger" id="clear">Clear interests</button></div>
+    </div>`;
+  el.querySelector('#addTopic').addEventListener('click', () => { readEditor(); profile.topics.push({name:'New topic', weight:3, terms:[]}); renderEditor(); });
+  el.querySelector('#topics').addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (b){ readEditor(); profile.topics.splice(+b.dataset.del, 1); renderEditor(); } });
+  el.querySelector('#apply').addEventListener('click', () => { readEditor(); firstRun = false; rescore('Scores updated'); });
+  el.querySelector('#example').addEventListener('click', () => { if (profile.topics.length && !confirm('Replace your interests with the example profile?')) return; profile = JSON.parse(JSON.stringify(EXAMPLE_PROFILE)); firstRun = false; rescore('Example profile loaded'); });
+  el.querySelector('#clear').addEventListener('click', () => { if (!confirm('Clear all interests? Your picks and notes stay.')) return; profile = EMPTY_PROFILE(); rescore('Interests cleared'); });
 }
-function renderCal(){
-  const el = document.getElementById('cal');
-  const includeMaybe = store.get('calMaybe', true);
-  const evs = calendarEvents(includeMaybe).filter(e => e.date && e._min != null);
-  const conf = conflictsFor(evs);
-  const calDays = days.filter(d => evs.some(e => e.date === d));
-  const show = calDays.length ? calDays : days.slice(2, 7);
-  const H0 = 7, H1 = 21;
-  let html = `<div class="cal-head"><h2 style="margin:0;font-size:17px">${esc(me ? me + "'s" : 'My')} calendar</h2>
-    <label class="row"><input type="checkbox" id="calMaybe" ${includeMaybe?'checked':''}> include "maybe"</label>
-    <button class="btn" id="icsAttend">Export .ics (attend)</button><button class="btn" id="icsAll">Export .ics (attend + maybe)</button>
-    <button class="btn" id="printCal">Print list</button>
-    <span class="legend" style="margin-left:auto">${evs.length} entries · green = attend, amber = maybe, red outline = time conflict · times Central</span></div>`;
-  if (conf.size) html += `<div class="conflicts">⚠ ${conf.size} items marked "attend" overlap in time. Click an entry to review.</div>`;
-  html += `<div class="grid" style="--days:${show.length};--hours:${H1-H0}"><div class="dayhead" style="border-left:0"></div>${show.map(d=>`<div class="dayhead">${esc(fmtDay(d))} · ${esc(d)}</div>`).join('')}
-    <div class="gcol axis">${Array.from({length:H1-H0},(_,i)=>`<div class="hr" style="top:${i*60}px">${fmtTime(String(H0+i).padStart(2,'0')+':00')}</div>`).join('')}</div>`;
-  for (const d of show){
-    const dayEvs = evs.filter(e => e.date === d).sort((a,b)=>a._min-b._min || b._max-a._max);
-    const cols = []; const placed = [];
-    for (const e of dayEvs){ let c = 0; while (cols[c] && cols[c] > e._min) c++; cols[c] = e._max; placed.push({e, c}); }
-    for (const p of placed){ const ov = placed.filter(q => overlaps(q.e, p.e)); p.n = Math.max(1, ...ov.map(q=>q.c+1)); }
-    html += `<div class="gcol">${Array.from({length:H1-H0},(_,i)=>`<div class="hr" style="top:${i*60}px"></div>`).join('')}
-      ${placed.map(({e,c,n}) => { const top = Math.max(0, e._min - H0*60), h = Math.max(22, Math.min(e._max, H1*60) - Math.max(e._min, H0*60)); const d2 = decisions[e.id]||'maybe';
-        return `<div class="ev ${d2} ${conf.has(e.id)?'conflict':''}" data-ev="${esc(e.id)}" style="top:${top}px;height:${h-2}px;left:calc(${(100/n)*c}% + 2px);width:calc(${100/n}% - 5px)" title="${esc(e.title)}"><div class="t">${esc(fmtTime(e.start))}–${esc(fmtTime(e.end))}</div><div>${esc(e.title)}</div><div class="loc">${esc(e.location||'')}</div></div>`; }).join('')}</div>`;
-  }
-  html += `</div><div class="plist" id="plist"><h3 class="sec">Agenda list</h3>`;
-  for (const d of show){
-    const dayEvs = evs.filter(e => e.date === d).sort((a,b)=>a._min-b._min);
-    if (!dayEvs.length) continue;
-    html += `<h4>${esc(fmtDay(d))}, ${esc(d)}</h4><ul>` + dayEvs.map(e => `<li data-ev="${esc(e.id)}" style="cursor:pointer"><b>${esc(fmtTime(e.start))}–${esc(fmtTime(e.end))}</b> ${decisions[e.id]==='maybe'?'(maybe) ':''}${esc(e.title)} <span class="legend">· ${esc(e.location||'')}</span>${e._posters?`<ul>${e._posters.map(p=>`<li data-ev="${esc(p.id)}" style="cursor:pointer">#${esc(p.number||'')} ${esc(p.title)} <span class="legend">— ${esc((p.presenters||[])[0]||'')}</span></li>`).join('')}</ul>`:''}</li>`).join('') + `</ul>`;
-  }
-  html += `</div>`;
-  el.innerHTML = html;
-  el.querySelector('#calMaybe').addEventListener('change', e => { store.set('calMaybe', e.target.checked); renderCal(); });
-  el.querySelector('#icsAttend').addEventListener('click', () => exportIcs(false));
-  el.querySelector('#icsAll').addEventListener('click', () => exportIcs(true));
-  el.querySelector('#printCal').addEventListener('click', () => { const w = window.open('', '_blank'); w.document.write(`<title>ASH 2026 agenda</title><style>body{font:13px -apple-system,Helvetica,Arial;padding:20px}h4{margin:14px 0 4px}li{margin:3px 0}.legend{color:#666}</style>` + el.querySelector('#plist').innerHTML); w.document.close(); w.print(); });
-  el.onclick = e => { const t = e.target.closest('[data-ev]'); if (!t) return; e.stopPropagation(); let id = t.dataset.ev; if (id.startsWith('grp-')) id = id.slice(4); if (!byId.has(id)) return; selected = id; switchTab('rank'); renderDetail(); };
+function readEditor(){
+  const el = document.getElementById('editor'); if (!el || !el.querySelector('#topics')) return;
+  const topics = [...el.querySelectorAll('.topic')].map(t => ({ name: t.querySelector('[data-name]').value.trim() || 'Topic', weight: +t.querySelector('[data-w]').value, enabled: t.querySelector('[data-en]').checked, terms: t.querySelector('[data-terms]').value.split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean) }));
+  const lines = id => el.querySelector(id).value.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+  const pw = {}; el.querySelectorAll('[data-pw]').forEach(i => { pw[i.dataset.pw] = +i.value; });
+  profile = {topics, people: lines('#people'), institutions: lines('#insts'), negatives: lines('#negs'), programWeights: pw, graph: Object.assign({}, profile.graph, {strength:+el.querySelector('#gS').value, alpha:+el.querySelector('#gA').value, hops:+el.querySelector('#gH').value})};
 }
-// ---------- exports & sharing ----------
-function icsDate(date, hm){ const [y,mo,d] = date.split('-').map(Number); const [h,mi] = hm.split(':').map(Number); const dt = new Date(Date.UTC(y, mo-1, d, h+6, mi)); return dt.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''); }
-const icsEsc = s => String(s||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/[,;]/g, m => '\\'+m);
-function exportIcs(includeMaybe){
-  const evs = calendarEvents(includeMaybe).filter(e => e.date && e.start && e.end);
-  if (!evs.length){ toast('Nothing marked yet'); return; }
-  const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//ASH 2026 Planner//EN','CALSCALE:GREGORIAN','X-WR-CALNAME:ASH 2026 (my picks)'];
-  for (const e of evs){
-    const d = decisions[e.id] === 'maybe' ? '[maybe] ' : '';
-    let desc = [e.program, e.session_title ? 'Session: ' + e.session_title : '', (e.presenters||[]).length ? 'Presenters: ' + e.presenters.slice(0,8).join(', ') : ''].filter(Boolean).join('\n');
-    if (e._posters) desc += '\nPosters:\n' + e._posters.map(p => `#${p.number||''} ${p.title} — ${(p.presenters||[])[0]||''}`).join('\n');
-    if (e.abstract) desc += '\n\n' + e.abstract.slice(0, 600) + (e.abstract.length > 600 ? '…' : '');
-    if (notes[e.id]) desc += '\n\nNotes: ' + notes[e.id];
-    if (e.ash_url) desc += '\n' + e.ash_url;
-    lines.push('BEGIN:VEVENT', `UID:ash2026-${e.id}@planner`, `DTSTAMP:${icsDate('2026-11-04','12:00')}`, `DTSTART:${icsDate(e.date, e.start)}`, `DTEND:${icsDate(e.date, e.end)}`,
-      `SUMMARY:${icsEsc(d + (e.number && !e._isGroup ? '#'+e.number+' ' : '') + e.title)}`, `LOCATION:${icsEsc(e.location||'')}`, `DESCRIPTION:${icsEsc(desc)}`, e.ash_url ? `URL:${e.ash_url}` : '', 'END:VEVENT');
-  }
-  lines.push('END:VCALENDAR');
-  download('ash2026-my-schedule.ics', lines.filter(Boolean).join('\r\n'), 'text/calendar');
+// ---------- Wizard: build an interest web ----------
+const WIZ_SKIP = new Set(['run','runs','program','programs','recovery','work','works','interested','interest','study','studies','research','center','clinic','clinical','patients','care','field','area','areas','focus','lab','laboratory','group','team','fellow','faculty','physician','physicians','medicine','hospital','university','department','year','years','new','current','future','basic','general','major','role','approach']);
+function extractTerms(text){
+  if (!G) return [];
+  const t = (text||'').toLowerCase().replace(/[’']/g, "'");
+  const sents = t.split(/[.;:?!()\[\]{}\n,]+|\s[-–—]\s/);
+  const hits = new Map();
+  for (const s of sents){ const toks = s.match(/[a-z0-9][a-z0-9\-\+\/]*[a-z0-9\+]|[a-z0-9]/g) || []; for (let i = 0; i < toks.length; i++) for (let n = 1; n <= 3; n++){ if (i+n > toks.length) break; const g = toks.slice(i, i+n).join(' '); const id = gIndex.get(normKey(g)); if (id != null && G.terms[id].df <= 600 && G.terms[id].df >= 8 && !WIZ_SKIP.has(G.terms[id].label)) hits.set(id, (hits.get(id)||0)+1); } }
+  return [...hits.keys()].sort((a,b) => gIdf[b]*Math.min(3,hits.get(b)) - gIdf[a]*Math.min(3,hits.get(a)));
 }
-function exportCsv(){
-  const rows = items.filter(it => decisions[it.id] && decisions[it.id] !== 'skip').sort((a,b)=>(a.date||'').localeCompare(b.date||'')||((a._min??0)-(b._min??0)));
-  if (!rows.length){ toast('Nothing marked yet'); return; }
-  const cols = ['decision','date','start','end','location','program','type','number','title','session_title','presenters','score','note','ash_url'];
-  const q = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
-  const out = [cols.join(',')].concat(rows.map(it => cols.map(c => q(c==='decision'?decisions[it.id]:c==='presenters'?(it.presenters||[]).join('; '):c==='score'?it._score.toFixed(1):c==='note'?(notes[it.id]||''):it[c])).join(',')));
-  download('ash2026-my-picks.csv', out.join('\n'), 'text/csv');
+function openWizard(){
+  const picked = new Map(); let extracted = [], extraText = '', nameText = me;
+  (profile.topics||[]).forEach(t => { const i = BUNDLES.findIndex(b => b[0] === t.name); if (i >= 0) picked.set(i, +t.weight||3); });
+  openSheet(`<div class="sh-head"><h2>Your interest web</h2><button class="btn sm quiet" data-close>Later</button></div><div class="sh-body wiz" id="wbody"></div><div class="sh-foot" id="wfoot"></div>`);
+  const body = document.getElementById('wbody'), foot = document.getElementById('wfoot');
+  const draw = () => {
+    body.innerHTML = `
+      <h2>What do you care about at ASH?</h2>
+      <p class="legend">Pick areas and set how much each matters. Then describe your work in a few sentences and the planner finds matching keywords across every abstract. You can refine everything later.</p>
+      <div style="margin:8px 0 18px"><div class="legend" style="margin-bottom:4px">Your name</div><input type="text" id="wname" value="${esc(nameText)}" placeholder="Shown in share links and calendar files" autocomplete="name"></div>
+      <div id="bundles">${BUNDLES.map((b, i) => `<div class="bundle"><label class="row" style="border:0;padding:0;flex:1"><input type="checkbox" data-b="${i}" ${picked.has(i)?'checked':''}><span class="nm">${esc(b[0])}<small>${esc(b[1].split(/,\s*/).slice(0,5).join(', '))}…</small></span></label><div class="step ${picked.has(i)?'':'hide'}"><button data-dec="${i}" type="button">−</button><span>×${picked.get(i)||3}</span><button data-inc="${i}" type="button">+</button></div></div>`).join('')}</div>
+      <div style="margin:18px 0 6px"><div class="legend" style="margin-bottom:4px">Describe your work, or paste a bio or an abstract</div><textarea id="wdesc" rows="4" placeholder="e.g. I run a transplant program and study T-cell recovery after haploidentical HCT; interested in GVHD prophylaxis, CMV, spectral flow and CAR-T toxicity.">${esc(extraText)}</textarea><div class="rowbtns" style="margin-top:8px"><button class="btn sm" id="wextract" type="button">Find keywords in my text</button></div>
+      <div class="found" id="wfound">${extracted.map(([id,on]) => `<button data-kw="${id}" class="${on?'on':''}" type="button">${esc(gLabel[id])}</button>`).join('')}</div>${extracted.length?'<div class="legend">Tap to toggle. Selected keywords become a weighted topic of their own.</div>':''}</div>`;
+    foot.innerHTML = `<div class="rowbtns"><button class="btn primary" id="wbuild" style="flex:1">Build my web</button>${!profile.topics.length ? '<button class="btn" id="wexample">Use the example</button>' : ''}</div>`;
+    foot.querySelector('#wbuild').addEventListener('click', build);
+    const ex = foot.querySelector('#wexample'); if (ex) ex.addEventListener('click', () => { profile = JSON.parse(JSON.stringify(EXAMPLE_PROFILE)); const nm = body.querySelector('#wname').value.trim(); if (nm){ me = nm; store.set('me', me); renderWho(); } firstRun = false; closeSheet(); rescore('Example profile loaded'); switchView('web'); });
+  };
+  const build = () => {
+    const nm = body.querySelector('#wname').value.trim(); if (nm !== me){ me = nm; store.set('me', me); renderWho(); }
+    const keep = profile.topics.filter(t => !BUNDLES.some(b => b[0] === t.name) && t.name !== 'From my description');
+    const topics = [...picked.entries()].map(([i, w]) => ({name: BUNDLES[i][0], weight: w, terms: bundleTerms(i)}));
+    const chosen = extracted.filter(([,on]) => on).map(([id]) => gLabel[id]);
+    if (chosen.length) topics.push({name:'From my description', weight:4, terms: chosen});
+    if (!topics.length){ toast('Pick at least one area or some keywords'); return; }
+    profile.topics = topics.concat(keep); if (!profile.programWeights || !Object.keys(profile.programWeights).length) profile.programWeights = Object.assign({}, PROGRAM_DEFAULTS);
+    firstRun = false; closeSheet(); rescore(`Interest web built from ${topics.length} topic${topics.length>1?'s':''}`); switchView('web');
+  };
+  const snap = () => { extraText = body.querySelector('#wdesc').value; nameText = body.querySelector('#wname').value; };
+  body.addEventListener('change', e => { const cb = e.target.closest('[data-b]'); if (cb){ const i = +cb.dataset.b; if (cb.checked) picked.set(i, picked.get(i)||3); else picked.delete(i); snap(); draw(); } });
+  body.addEventListener('click', e => {
+    const inc = e.target.closest('[data-inc]'), dec = e.target.closest('[data-dec]');
+    if (inc || dec){ const i = +(inc||dec).dataset[inc?'inc':'dec']; picked.set(i, Math.max(1, Math.min(5, (picked.get(i)||3) + (inc?1:-1)))); snap(); draw(); return; }
+    if (e.target.id === 'wextract'){ snap(); const ids = extractTerms(extraText).slice(0, 40); extracted = ids.map(id => [id, true]); draw(); if (!ids.length) toast('No known keywords found in that text'); return; }
+    const kw = e.target.closest('[data-kw]'); if (kw){ const id = +kw.dataset.kw; extracted = extracted.map(([i,on]) => i===id ? [i,!on] : [i,on]); kw.classList.toggle('on'); }
+  });
+  draw();
 }
+// ---------- Share links ----------
 const b64u = { enc: bytes => { let s = ''; for (const b of bytes) s += String.fromCharCode(b); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }, dec: s => Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0)) };
-async function compress(str){ const bytes = new TextEncoder().encode(str); if (!('CompressionStream' in window)) return 'r' + b64u.enc(bytes); const cs = new CompressionStream('deflate-raw'); const w = cs.writable.getWriter(); w.write(bytes); w.close(); const out = new Uint8Array(await new Response(cs.readable).arrayBuffer()); return 'z' + b64u.enc(out); }
+async function compress(str){ const bytes = new TextEncoder().encode(str); if (!('CompressionStream' in window)) return 'r' + b64u.enc(bytes); const cs = new CompressionStream('deflate-raw'); const w = cs.writable.getWriter(); w.write(bytes); w.close(); return 'z' + b64u.enc(new Uint8Array(await new Response(cs.readable).arrayBuffer())); }
 async function decompress(s){ const bytes = b64u.dec(s.slice(1)); if (s[0] === 'r') return new TextDecoder().decode(bytes); const ds = new DecompressionStream('deflate-raw'); const w = ds.writable.getWriter(); w.write(bytes); w.close(); return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer()); }
 async function makeShareLink(){
-  if (!me){ const v = prompt('Your name (shown to whoever opens the link):', ''); if (v === null) return; me = v.trim(); store.set('me', me); renderWho(); }
-  const payload = {n: me || 'A friend', a: Object.keys(decisions).filter(k => decisions[k]==='attend' && byId.has(k)), m: Object.keys(decisions).filter(k => decisions[k]==='maybe' && byId.has(k)), p: profile};
+  if (!me){ askName(); if (!me) return; }
+  const payload = {n: me, a: Object.keys(decisions).filter(k => decisions[k]==='attend' && byId.has(k)), m: Object.keys(decisions).filter(k => decisions[k]==='maybe' && byId.has(k)), p: profile};
   const url = location.href.split('#')[0] + '#share=' + await compress(JSON.stringify(payload));
-  try { await navigator.clipboard.writeText(url); toast(`Link copied (${(url.length/1024).toFixed(1)} KB). Whoever opens it keeps their own picks.`); } catch(e){ prompt('Copy this link:', url); }
+  if (navigator.share && !isDesk()){ try { await navigator.share({title:'My ASH 2026 picks', url}); return; } catch(e){} }
+  try { await navigator.clipboard.writeText(url); toast('Link copied. Whoever opens it keeps their own picks.'); } catch(e){ prompt('Copy this link:', url); }
 }
 async function loadShare(){
   const m = location.hash.match(/#share=([^&]+)/); if (!m) return;
   try {
     const p = JSON.parse(await decompress(m[1]));
     shared = {name: p.n || 'A friend', attend: new Set(p.a||[]), maybe: new Set(p.m||[]), profile: p.p || null};
-    const b = document.getElementById('banner');
-    b.style.display = 'flex';
-    b.innerHTML = `<b>${esc(shared.name)}</b> shared ${shared.attend.size} attend / ${shared.maybe.size} maybe picks${shared.profile?' and an interest profile':''}. Your own picks are untouched.
-      <button class="btn tiny" id="shOverlay">Show only their picks</button>
-      <button class="btn tiny" id="shImport">Copy their picks into mine</button>
-      ${shared.profile ? '<button class="btn tiny" id="shProfile">Use their interest profile</button>' : ''}
-      <button class="btn tiny" id="shDismiss">Dismiss</button>`;
-    b.querySelector('#shOverlay').addEventListener('click', () => { F.sharedOnly = true; F.decision = 'all'; switchTab('rank'); renderSide(); renderList(); });
-    b.querySelector('#shImport').addEventListener('click', () => { if (!confirm(`Add ${shared.name}'s picks to yours? Your existing decisions are kept.`)) return; for (const id of shared.attend) if (!decisions[id]) decisions[id] = 'attend'; for (const id of shared.maybe) if (!decisions[id]) decisions[id] = 'maybe'; store.set('decisions', decisions); renderList(); renderStats(); toast('Imported'); });
-    const sp = b.querySelector('#shProfile'); if (sp) sp.addEventListener('click', () => { if (!confirm(`Replace your interest profile with ${shared.name}'s?`)) return; profile = shared.profile; if (!profile.graph) profile.graph = JSON.parse(JSON.stringify(DEFAULT_PROFILE.graph)); rescore('Profile replaced'); });
-    b.querySelector('#shDismiss').addEventListener('click', () => { shared = null; F.sharedOnly = false; b.style.display = 'none'; history.replaceState(null, '', location.pathname + location.search); renderSide(); renderList(); });
-    renderSide(); renderList();
+    const b = document.getElementById('banner'); b.className = 'banner';
+    b.innerHTML = `<span><b>${esc(shared.name)}</b> shared ${shared.attend.size} attend and ${shared.maybe.size} maybe picks${shared.profile?' and their interests':''}. Yours stay as they are.</span>
+      <button class="btn sm" id="shOnly">Show only theirs</button><button class="btn sm" id="shCopy">Copy into mine</button>${shared.profile ? '<button class="btn sm" id="shProf">Use their interests</button>' : ''}<button class="btn sm quiet" id="shX">Dismiss</button>`;
+    b.querySelector('#shOnly').addEventListener('click', () => { sharedOnly = !sharedOnly; b.querySelector('#shOnly').textContent = sharedOnly ? 'Show everything' : 'Show only theirs'; switchView('picks'); });
+    b.querySelector('#shCopy').addEventListener('click', () => { if (!confirm(`Add ${shared.name}'s picks to yours? Yours are kept.`)) return; for (const id of shared.attend) if (!decisions[id]) decisions[id] = 'attend'; for (const id of shared.maybe) if (!decisions[id]) decisions[id] = 'maybe'; store.set('decisions', decisions); renderAll(); toast('Copied'); });
+    const sp = b.querySelector('#shProf'); if (sp) sp.addEventListener('click', () => { if (!confirm(`Replace your interests with ${shared.name}'s?`)) return; profile = shared.profile; if (!profile.graph) profile.graph = {strength:1, alpha:.35, hops:2, muted:[]}; firstRun = false; rescore('Interests replaced'); });
+    b.querySelector('#shX').addEventListener('click', () => { shared = null; sharedOnly = false; b.className = 'hide'; history.replaceState(null, '', location.pathname + location.search); renderAll(); });
+    renderAll();
   } catch(e){ console.warn('share link unreadable', e); }
 }
-// ---------- tabs / stats ----------
-function switchTab(t){
-  tab = t;
-  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
-  const cal = document.getElementById('cal'), web = document.getElementById('web'), main = document.getElementById('main'), side = document.getElementById('side'), det = document.getElementById('detail');
-  cal.style.display = 'none'; web.classList.remove('on');
-  if (t === 'cal'){ cal.style.display = 'block'; main.style.display = side.style.display = det.style.display = 'none'; renderCal(); }
-  else if (t === 'web'){ web.classList.add('on'); main.style.display = side.style.display = det.style.display = 'none'; renderWeb(); }
-  else { main.style.display = side.style.display = det.style.display = ''; if (t === 'profile') renderProfile(); else renderDetail(); }
-}
-document.querySelector('.tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) switchTab(b.dataset.tab); });
+// ---------- boot ----------
 function renderWho(){ document.getElementById('who').textContent = me || 'You'; }
-document.getElementById('who').addEventListener('click', () => { const v = prompt('Your name (used in share links and the calendar title):', me || ''); if (v !== null){ me = v.trim(); store.set('me', me); renderWho(); } });
-function renderStats(){
-  const m = DATA.meta || {};
-  document.getElementById('stats').textContent = `${(m.items||items.length).toLocaleString()} items · ${(m.with_abstract||0).toLocaleString()} abstracts · ${Object.values(decisions).filter(d=>d==='attend').length} attend / ${Object.values(decisions).filter(d=>d==='maybe').length} maybe`;
-}
-function renderAll(){ renderWho(); renderSide(); renderList(); renderStats(); if (tab==='profile') renderProfile(); else if (tab==='web') renderWeb(); else renderDetail(); }
-window.addEventListener('resize', () => { if (tab === 'web') drawWeb(); });
-scoreAll(); renderAll(); loadShare();
+function renderStats(){ const n = Object.values(decisions).filter(d=>d==='attend').length + Object.values(decisions).filter(d=>d==='maybe').length; const c = document.getElementById('navcount'); c.textContent = n; c.classList.toggle('hide', !n); document.getElementById('stats').textContent = profile.topics.length ? '' : 'no interests yet'; }
+function renderAll(){ renderWho(); renderStats(); renderSubbar(); if (view==='picks') renderPicks(); if (view==='plan') renderPlan(); if (view==='web') renderWeb(); if (view==='me') renderMe(); }
+document.getElementById('who').addEventListener('click', askName);
+document.getElementById('searchbtn').addEventListener('click', () => { switchView('picks'); const q = document.getElementById('q'); if (q){ q.focus(); q.scrollIntoView({block:'center'}); } });
+window.addEventListener('resize', () => { if (view === 'web') drawMap(); });
+scoreAll(); renderAll(); loadShare().then(() => { if (firstRun && !shared) setTimeout(openWizard, 400); });
 </script>
 </body>
 </html>
