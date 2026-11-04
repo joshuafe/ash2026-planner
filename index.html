@@ -626,7 +626,7 @@ function buildWebLayout(seeds, derived){
   webAnim = requestAnimationFrame(tick);
   let drag = null;
   const pos = ev => { const r = canvas.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
-  const hit = (x, y) => { let best = null, bd = 1e9; for (const n of webNodes){ const d = Math.hypot(n.x - x, n.y - y); const rr = 6 + 7*n.w; if (d < rr + 3 && d < bd){ best = n; bd = d; } } return best; };
+  const hit = (x, y) => { let best = null, bd = 1e9; for (const n of webNodes){ const d = Math.hypot(n.x - x, n.y - y); const rr = 4 + 3.5*n.w; if (d < rr + 4 && d < bd){ best = n; bd = d; } } return best; };
   canvas.onmousedown = ev => { const [x, y] = pos(ev); const n = hit(x, y); if (n){ drag = n; n.fixed = true; n._x0 = x; n._y0 = y; } };
   canvas.onmousemove = ev => { const [x, y] = pos(ev); if (drag){ drag.x = x; drag.y = y; drawWeb(); return; } const h = hit(x, y); canvas.style.cursor = h ? 'pointer' : 'grab'; canvas.title = h ? gLabel[h.id] : ''; };
   canvas.onmouseup = ev => { const [x, y] = pos(ev); if (drag){ const n = drag; drag = null; if (Math.hypot(n._x0 - x, n._y0 - y) < 3){ webSel = n.id; renderWebDetail(); drawWeb(); } } };
@@ -639,11 +639,12 @@ function drawWeb(){
   const ctx = canvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
   const muted = new Set((profile.graph.muted||[]).map(normKey));
   for (const [i, j, w] of webEdges){ const a = webNodes[i], b = webNodes[j]; const hl = webSel != null && (a.id === webSel || b.id === webSel); ctx.strokeStyle = hl ? 'rgba(138,28,28,.7)' : `rgba(90,110,140,${0.08 + 0.35*w})`; ctx.lineWidth = hl ? 1.6 : 0.6 + 1.6*w; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
-  ctx.font = '11px -apple-system, Helvetica, Arial'; ctx.textBaseline = 'middle';
-  for (const n of webNodes){ const r = 6 + 7*n.w; const isM = muted.has(normKey(gLabel[n.id]));
+  for (const n of webNodes){ const r = 4 + 3.5*n.w; const isM = muted.has(normKey(gLabel[n.id]));
     ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2); ctx.fillStyle = isM ? '#c4c9ce' : n.seed ? '#f2b544' : '#7fa8d9'; ctx.fill();
-    if (n.id === webSel){ ctx.lineWidth = 2.5; ctx.strokeStyle = '#8a1c1c'; ctx.stroke(); }
-    const lbl = gLabel[n.id]; ctx.fillStyle = '#1b1f24'; ctx.textAlign = 'left'; ctx.fillText(lbl.length > 26 ? lbl.slice(0, 25) + '…' : lbl, n.x + r + 3, n.y); }
+    if (n.id === webSel){ ctx.lineWidth = 2.5; ctx.strokeStyle = '#8a1c1c'; ctx.stroke(); } }
+  ctx.font = '11px -apple-system, Helvetica, Arial'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.85)';
+  for (const n of webNodes){ const r = 4 + 3.5*n.w; const lbl = gLabel[n.id]; const t = lbl.length > 26 ? lbl.slice(0, 25) + '…' : lbl;
+    ctx.strokeText(t, n.x + r + 3, n.y); ctx.fillStyle = n.seed ? '#1b1f24' : '#33414f'; ctx.fillText(t, n.x + r + 3, n.y); }
 }
 // ---------- calendar ----------
 function chosenItems(includeMaybe){ return items.filter(it => decisions[it.id] === 'attend' || (includeMaybe && decisions[it.id] === 'maybe')); }
