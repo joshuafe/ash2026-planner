@@ -12,6 +12,13 @@ Phone-first, works offline from the folder or from GitHub Pages. Four tabs:
 
 **Each person builds their own web.** On first open the wizard asks for areas of interest (22 bundles with weights) and a free-text description of your work, from which it extracts matching keywords from the corpus. Everything is saved in that browser only, so anyone you send the link to gets their own profile, picks and notes. A **share link** carries your picks and interests to someone else as an overlay they can copy or adopt, without touching their own.
 
+## Sync across devices and the live calendar feed
+Optional, under **Me**. *Create a sync code* makes an account on a small Supabase backend (project `ash2026-planner`, `supabase/`): a secret code like `ABCD-EFGH-JKLM` is the only credential, so there is no sign-up or email. Enter the same code on another device and both merge, newest change per entry wins; picks, notes, name and interests all sync, and the app re-syncs whenever it comes to the foreground. Unlink keeps local data and leaves the account for other devices.
+
+Each account also gets a **live feed link** (`…/functions/v1/ics?t=<token>`, optionally `&m=1` for maybe picks). Subscribe to it in Outlook (Add calendar → Subscribe from web), Google Calendar (From URL) or Apple Calendar and it follows your picks; calendar apps refresh subscriptions every few hours. The feed token is separate from the sync code, so sharing the feed never exposes the account.
+
+Backend pieces: `supabase/migrations/20261104_create_accounts.sql` (one `accounts` row per code, row-level security on, no anon access) and two edge functions deployed with JWT verification off because they authenticate with the code or token themselves: `supabase/functions/sync` (create / merge / read) and `supabase/functions/ics` (feed).
+
 ## Scoring
 A term scores when it appears in a title (3), ASH keywords (2), session title (1.5), abstract (1–2 by frequency) or description (1); per topic the sum is capped and multiplied by the topic weight. The keyword web adds `6·ln(1 + s/4)` where `s` sums propagated keyword weights (title hits count double, broad keywords are down-weighted). The total is scaled by the program weight; people (+8) and institutions (+3) add bonuses; excluded terms subtract 8. A session also inherits 60% of the mean of its three best talks.
 

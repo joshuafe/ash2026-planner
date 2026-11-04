@@ -166,7 +166,10 @@ label.row input[type=checkbox]{width:22px;height:22px;accent-color:var(--stain);
 #mapwrap{margin:8px 16px;border:1px solid var(--hair2);border-radius:16px;overflow:hidden;background:var(--card);position:relative;height:60vh;display:none}
 #mapwrap.on{display:block}
 #map{width:100%;height:100%;display:block;touch-action:none}
-#mapnote{position:absolute;left:12px;top:10px;font-size:12.5px;color:var(--muted);pointer-events:none}
+#mapnote{position:absolute;left:12px;top:10px;font-size:12.5px;color:var(--muted);pointer-events:none;max-width:55%}
+@media (max-width:899px){#mapnote{display:none}#mapwrap{height:52vh}}
+#mapctl{position:absolute;right:10px;top:8px}
+#mapctl .seg button{padding:5px 10px;font-size:13px}
 /* ---------- wizard ---------- */
 .wiz h2{font-family:var(--serif);font-size:26px;font-weight:500;line-height:1.2;margin:6px 0 6px}
 .wiz p{margin:0 0 10px}
@@ -386,7 +389,7 @@ function download(name, text, type='text/plain'){ const a = document.createEleme
 const STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6.2 6.7.8-5 4.6 1.3 6.7-5.9-3.4-5.9 3.4 1.3-6.7-5-4.6 6.7-.8z"/></svg>';
 const Q = '<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 110 18 9 9 0 010-18zm0 13.2a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4zM9 9.5a3 3 0 116 0c0 1.6-1.3 2.1-2 2.7-.5.4-1 .9-1 1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 const X = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
-function setDecision(id, d){ if (decisions[id] === d) delete decisions[id]; else decisions[id] = d; store.set('decisions', decisions); refreshAfterDecision(id); }
+function setDecision(id, d){ if (decisions[id] === d) delete decisions[id]; else decisions[id] = d; store.set('decisions', decisions); touch(id); refreshAfterDecision(id); }
 function refreshAfterDecision(id){
   renderStats();
   if (view === 'picks') renderList(false);
@@ -394,7 +397,7 @@ function refreshAfterDecision(id){
   const open = document.querySelector('#sheet.on [data-detail]') || document.querySelector('#dpanel [data-detail]');
   if (open){ const oid = open.dataset.detail; if (oid === id || byId.get(oid)?.children?.includes(id)) renderDetailInto(open.parentElement, oid); }
 }
-function rescore(msg){ store.set('profile', profile); scoreAll(); renderAll(); if (msg) toast(msg); }
+function rescore(msg){ store.set('profile', profile); profileTs = Date.now(); store.set('profile_ts', profileTs); scheduleSync(); scoreAll(); renderAll(); if (msg) toast(msg); }
 // =====================================================================
 // Views
 // =====================================================================
@@ -551,7 +554,7 @@ function renderDetailInto(container, id){
     <div class="d-sec"><h4>Your notes</h4><textarea id="note" placeholder="Questions to ask, people to meet, why it matters">${esc(notes[it.id]||'')}</textarea></div>
     <div class="d-sec rowbtns">${it.ash_url?`<a class="btn sm" href="${esc(it.ash_url)}" target="_blank" rel="noopener">Open on ASH site</a>`:''}${it.ep_url?`<a class="btn sm" href="${esc(it.ep_url)}" target="_blank" rel="noopener">Open in ASH app</a>`:''}</div>
   </div>`;
-  container.querySelector('#note').addEventListener('input', e => { if (e.target.value.trim()) notes[it.id] = e.target.value; else delete notes[it.id]; store.set('notes', notes); });
+  container.querySelector('#note').addEventListener('input', e => { if (e.target.value.trim()) notes[it.id] = e.target.value; else delete notes[it.id]; store.set('notes', notes); clearTimeout(touch._n); touch._n = setTimeout(() => touch(it.id), 800); });
   if (inSheet){ document.getElementById('dfoot').innerHTML = decideHtml(it.id); document.getElementById('shtitle').textContent = (parent ? 'In: ' + parent.title : (it.session_title || typeLabel(it))).slice(0, 80); container.scrollTop = 0; }
 }
 for (const host of [sheetEl, document.getElementById('v-picks'), document.getElementById('v-web')]) host.addEventListener('click', e => {
@@ -613,6 +616,7 @@ function openCalendarSheet(){
   openSheet(`<div class="sh-head"><h2>Add to your calendar</h2><button class="btn sm quiet" data-close>Done</button></div><div class="sh-body stack">
     <p>Download a calendar file with your picks, then open it in your calendar app. Times are set in Central time, so they shift correctly if your phone is in another zone.</p>
     <div class="rowbtns"><button class="btn primary" id="icsA">Attend only</button><button class="btn" id="icsAM">Attend and maybe</button></div>
+    ${sync ? `<div><b>Prefer a feed that updates itself?</b><div class="legend">Your live feed link is under Me. Subscribe to it once and your calendar follows your picks.</div></div>` : ''}
     <div><b>Outlook</b><div class="legend">On the web: Add calendar, then Upload from file. On desktop: File, Open &amp; Export, Import/Export, Import an iCalendar (.ics) file, then choose Import to merge into your calendar.</div></div>
     <div><b>Google Calendar</b><div class="legend">Settings, Import &amp; export, select the file. On a phone, open the file and choose Google Calendar.</div></div>
     <div><b>Apple Calendar</b><div class="legend">Open the downloaded file; on iPhone, tap it in Files or Mail and choose Add All.</div></div>
@@ -666,7 +670,7 @@ function renderWeb(){
       ${isMuted ? `<button data-unmute="${i}">Unmute</button>` : `<button data-mute="${i}" title="Never let this keyword add points">Mute</button>`}</div>`; };
   v.innerHTML = `<div class="section-h">Keyword web<small>${seeds.length} of your terms are in the web and ${derived.length} related keywords were picked up.</small></div>
     <div class="rowbtns" style="padding:0 16px 8px"><button class="btn sm ${mapOn?'primary':''}" id="maptoggle">${mapOn?'Hide map':'Show map'}</button></div>
-    <div id="mapwrap" class="${mapOn?'on':''}"><canvas id="map"></canvas><div id="mapnote">Drag to move, tap a keyword to inspect. Purple are yours, blue are related.</div></div>
+    <div id="mapwrap" class="${mapOn?'on':''}"><canvas id="map"></canvas><div id="mapnote">Your strongest keywords and what they travel with. Tap one to focus on it.</div><div id="mapctl" class="rowbtns"></div></div>
     <div class="webgrid">
       <div><div class="searchrow" style="padding:10px 16px"><div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="kwq" placeholder="Find a keyword" value="${esc(webQuery)}"></div></div>
         ${found.length ? found.map(t=>kwRow(t.id)).join('') : (q ? '<div class="empty">No keyword contains that.</div>' : '')}
@@ -681,8 +685,10 @@ function renderWeb(){
     const r = e.target.closest('[data-rm]'); if (r){ removeTermFromInterests(gLabel[+r.dataset.rm]); return; }
     const m = e.target.closest('[data-mute]'); if (m){ muteTerm(gLabel[+m.dataset.mute]); return; }
     const u = e.target.closest('[data-unmute]'); if (u){ unmuteTerm(gLabel[+u.dataset.unmute]); return; }
-    const s = e.target.closest('[data-sel]'); if (s){ e.preventDefault(); webSel = +s.dataset.sel; renderWebDetail(); if (!webNodes.some(n => n.id === webSel)) buildMap(seeds, derived); drawMap(); const d = v.querySelector('#webdetail'); if (!isDesk()) d.scrollIntoView({behavior:'smooth', block:'start'}); return; }
+    const s = e.target.closest('[data-sel]'); if (s){ e.preventDefault(); webSel = +s.dataset.sel; renderWebDetail(); renderMapControls(); buildMap(seeds, derived); const d = v.querySelector('#webdetail'); if (!isDesk()) d.scrollIntoView({behavior:'smooth', block:'start'}); return; }
   };
+  currentSeeds = seeds; currentDerived = derived; renderMapControls();
+  v.querySelector('#mapctl').addEventListener('click', e => { const b = e.target.closest('[data-md]'); if (b){ mapDetail = +b.dataset.md; renderMapControls(); buildMap(seeds, derived); } if (e.target.id === 'mapback'){ webSel = null; renderWebDetail(); renderMapControls(); buildMap(seeds, derived); } });
   if (mapOn || isDesk()) buildMap(seeds, derived);
   renderWebDetail();
 }
@@ -695,28 +701,64 @@ function renderWebDetail(){
     <div style="padding:0 16px"><div class="legend">Travels with</div><div class="chips" style="margin:6px 0 12px">${nb.map(([b,w])=>`<a href="#" class="chip ${gSeeds.has(b)?'':'rel'}" data-sel="${b}">${esc(gLabel[b])}</a>`).join('')}</div><div class="legend">Best entries with this keyword</div></div>
     ${itemsWithTerm(webSel, 8).map(it=>`<div class="talk" data-open="${it.id}" style="padding:8px 16px"><div class="t">${it._score.toFixed(0)}</div><div>${esc(it.title)}<div class="s">${esc(dayShort(it.date))}, ${esc(it.program||'')}</div></div><span></span></div>`).join('')}`;
 }
+let mapDetail = 1;   // 0 fewer, 1 normal, 2 more
+let currentSeeds = [], currentDerived = [];
+function mapSelection(seeds){
+  if (webSel != null){   // focus: the keyword and what it travels with
+    const narrowF = (document.getElementById('map')?.parentElement?.clientWidth || 600) < 520;
+    const nb = gNb[webSel].slice().sort((a,b)=>b[1]-a[1]).slice(0, (narrowF ? [6,8,10] : [8,12,18])[mapDetail]).map(([b]) => b);
+    return {ids: [webSel, ...nb], focus: true};
+  }
+  const narrow = (document.getElementById('map')?.parentElement?.clientWidth || 600) < 520;
+  const lvl = narrow ? Math.min(mapDetail, 1) : mapDetail;
+  const nS = [4,6,12][lvl], k = [2,2,4][lvl];
+  const ids = []; const seen = new Set();
+  for (const sd of seeds.slice(0, nS)){ if (!seen.has(sd)){ seen.add(sd); ids.push(sd); } }
+  for (const sd of seeds.slice(0, nS)){
+    const nb = gNb[sd].slice().sort((a,b)=>b[1]-a[1]).filter(([b]) => !seen.has(b) && gWeight[b] >= G_FLOOR).slice(0, k);
+    for (const [b] of nb){ seen.add(b); ids.push(b); }
+  }
+  return {ids, focus: false};
+}
 function buildMap(seeds, derived){
   const canvas = document.getElementById('map'); if (!canvas || !canvas.offsetParent) return;
-  const ids = seeds.slice(0, 40).concat(derived.slice(0, 60)); if (webSel != null && !ids.includes(webSel)) ids.push(webSel);
+  const {ids, focus} = mapSelection(seeds);
   const idx = new Map(ids.map((id, i) => [id, i])); const W = canvas.parentElement.clientWidth || 600, H = canvas.parentElement.clientHeight || 500;
   const old = new Map(webNodes.map(n => [n.id, n]));
-  webNodes = ids.map((id, i) => { const o = old.get(id); const ang = i / ids.length * Math.PI * 2; const r = Math.min(W, H) * 0.36; return {id, x: o ? o.x : W/2 + r*Math.cos(ang), y: o ? o.y : H/2 + r*Math.sin(ang), vx:0, vy:0, w: gWeight[id] || 0.2, seed: gSeeds.has(id), fixed: o ? o.fixed : false}; });
-  webEdges = []; for (const n of webNodes) for (const [b, w] of gNb[n.id]) if (idx.has(b) && idx.get(b) > idx.get(n.id)) webEdges.push([idx.get(n.id), idx.get(b), w]);
+  if (webAnim) cancelAnimationFrame(webAnim);
+  if (focus){
+    const R = Math.min(W, H) * 0.36, n = ids.length - 1;
+    webNodes = ids.map((id, i) => ({id, x: i === 0 ? W/2 : W/2 + R*Math.cos((i-1)/n*Math.PI*2 - Math.PI/2), y: i === 0 ? H/2 : H/2 + R*Math.sin((i-1)/n*Math.PI*2 - Math.PI/2), vx:0, vy:0, w: gWeight[id] || 0.2, seed: gSeeds.has(id), fixed: true}));
+    webEdges = [];
+    for (let i = 1; i < ids.length; i++){ const e = gNb[ids[0]].find(([b]) => b === ids[i]); webEdges.push([0, i, e ? e[1] : 0.3]); }
+    for (let i = 1; i < ids.length; i++) for (const [b, w] of gNb[ids[i]]) if (idx.has(b) && idx.get(b) > i && w >= 0.6) webEdges.push([i, idx.get(b), w]);
+    drawMap(); bindMapPointer(canvas); return;
+  }
+  webNodes = ids.map((id, i) => { const o = old.get(id); const ang = i / ids.length * Math.PI * 2; const r = Math.min(W, H) * 0.34; return {id, x: o ? o.x : W/2 + r*Math.cos(ang), y: o ? o.y : H/2 + r*Math.sin(ang), vx:0, vy:0, w: gWeight[id] || 0.2, seed: gSeeds.has(id), fixed: o ? o.fixed : false}; });
+  webEdges = [];
+  for (const a of webNodes) for (const [b, w] of gNb[a.id]) if (idx.has(b) && idx.get(b) > idx.get(a.id) && (w >= 0.4 || a.seed || gSeeds.has(b))) webEdges.push([idx.get(a.id), idx.get(b), w]);
   let steps = 0;
-  const tick = () => { const k = 0.025, rep = Math.min(5000, W*H/140), damp = 0.8;
-    for (const a of webNodes){ a.fx = (W/2 - a.x) * 0.0012; a.fy = (H/2 - a.y) * 0.0012; }
-    for (let i = 0; i < webNodes.length; i++) for (let j = i+1; j < webNodes.length; j++){ const a = webNodes[i], b = webNodes[j]; let dx = b.x - a.x, dy = b.y - a.y; let d2 = dx*dx + dy*dy + 0.01; if (d2 > 360000) continue; const f = rep / d2; const d = Math.sqrt(d2); dx /= d; dy /= d; a.fx -= dx*f; a.fy -= dy*f; b.fx += dx*f; b.fy += dy*f; }
-    for (const [i, j, w] of webEdges){ const a = webNodes[i], b = webNodes[j]; const dx = b.x - a.x, dy = b.y - a.y; const d = Math.sqrt(dx*dx+dy*dy)+0.01; const target = Math.min(W, H) * (0.1 + 0.16*(1-w)); const f = k * (d - target) * (0.2 + w); a.fx += dx/d*f; a.fy += dy/d*f; b.fx -= dx/d*f; b.fy -= dy/d*f; }
-    for (const a of webNodes){ if (a.fixed) continue; a.vx = (a.vx + a.fx) * damp; a.vy = (a.vy + a.fy) * damp; a.x = Math.max(40, Math.min(W-120, a.x + a.vx)); a.y = Math.max(24, Math.min(H-24, a.y + a.vy)); }
+  const tick = () => { const k = 0.03, rep = Math.min(14000, W*H/35), damp = 0.8;
+    for (const a of webNodes){ a.fx = (W/2 - a.x) * 0.002; a.fy = (H/2 - a.y) * 0.002; }
+    for (let i = 0; i < webNodes.length; i++) for (let j = i+1; j < webNodes.length; j++){ const a = webNodes[i], b = webNodes[j]; let dx = b.x - a.x, dy = b.y - a.y; let d2 = dx*dx + dy*dy + 0.01; const f = rep / d2; const d = Math.sqrt(d2); dx /= d; dy /= d; a.fx -= dx*f; a.fy -= dy*f; b.fx += dx*f; b.fy += dy*f; }
+    for (const [i, j, w] of webEdges){ const a = webNodes[i], b = webNodes[j]; const dx = b.x - a.x, dy = b.y - a.y; const d = Math.sqrt(dx*dx+dy*dy)+0.01; const target = Math.min(W, H) * (0.16 + 0.2*(1-w)); const f = k * (d - target) * (0.2 + w); a.fx += dx/d*f; a.fy += dy/d*f; b.fx -= dx/d*f; b.fy -= dy/d*f; }
+    for (const a of webNodes){ if (a.fixed) continue; a.vx = (a.vx + a.fx) * damp; a.vy = (a.vy + a.fy) * damp; a.x = Math.max(40, Math.min(W-130, a.x + a.vx)); a.y = Math.max(28, Math.min(H-28, a.y + a.vy)); }
     drawMap(); if (++steps < 220) webAnim = requestAnimationFrame(tick); };
-  if (webAnim) cancelAnimationFrame(webAnim); webAnim = requestAnimationFrame(tick);
+  webAnim = requestAnimationFrame(tick);
+  bindMapPointer(canvas);
+}
+function bindMapPointer(canvas){
   let drag = null, moved = false;
   const pos = ev => { const r = canvas.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
-  const hit = (x, y) => { let best = null, bd = 1e9; for (const n of webNodes){ const d = Math.hypot(n.x - x, n.y - y); const rr = 3 + 2.2*n.w; if (d < rr + 10 && d < bd){ best = n; bd = d; } } return best; };
-  canvas.onpointerdown = ev => { const [x, y] = pos(ev); const n = hit(x, y); if (n){ drag = n; n.fixed = true; moved = false; canvas.setPointerCapture(ev.pointerId); } };
-  canvas.onpointermove = ev => { if (!drag) return; const [x, y] = pos(ev); if (Math.hypot(drag.x - x, drag.y - y) > 3) moved = true; drag.x = x; drag.y = y; drawMap(); };
-  canvas.onpointerup = () => { if (drag){ const n = drag; drag = null; if (!moved){ webSel = n.id; renderWebDetail(); drawMap(); } } };
+  const hit = (x, y) => { let best = null, bd = 1e9; for (const n of webNodes){ const d = Math.hypot(n.x - x, n.y - y); const rr = 3 + 2.2*n.w; if (d < rr + 12 && d < bd){ best = n; bd = d; } } return best; };
+  canvas.onpointerdown = ev => { const [x, y] = pos(ev); const n = hit(x, y); if (n){ drag = n; moved = false; canvas.setPointerCapture(ev.pointerId); } };
+  canvas.onpointermove = ev => { if (!drag) return; const [x, y] = pos(ev); if (Math.hypot(drag.x - x, drag.y - y) > 3){ moved = true; drag.fixed = true; } drag.x = x; drag.y = y; drawMap(); };
+  canvas.onpointerup = () => { if (drag){ const n = drag; drag = null; if (!moved){ webSel = n.id; renderWebDetail(); renderMapControls(); buildMap(currentSeeds, currentDerived); } } };
   canvas.onpointercancel = () => { drag = null; };
+}
+function renderMapControls(){
+  const c = document.getElementById('mapctl'); if (!c) return;
+  c.innerHTML = `${webSel != null ? `<button class="btn sm" id="mapback">Back to overview</button>` : ''}<span class="seg"><button data-md="0" class="${mapDetail===0?'on':''}">Fewer</button><button data-md="1" class="${mapDetail===1?'on':''}">Normal</button><button data-md="2" class="${mapDetail===2?'on':''}">More</button></span>`;
 }
 function drawMap(){
   const canvas = document.getElementById('map'); if (!canvas || !canvas.offsetParent) return;
@@ -727,7 +769,8 @@ function drawMap(){
   for (const [i, j, w] of webEdges){ const a = webNodes[i], b = webNodes[j]; const hl = webSel != null && (a.id === webSel || b.id === webSel); ctx.strokeStyle = hl ? 'rgba(91,63,160,.75)' : `rgba(120,110,150,${0.07 + 0.3*w})`; ctx.lineWidth = hl ? 1.6 : 0.6 + 1.4*w; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
   for (const n of webNodes){ const r = 3 + 2.2*n.w; const isM = muted.has(normKey(gLabel[n.id])); ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2); ctx.fillStyle = isM ? '#d3cfdc' : n.seed ? '#5b3fa0' : '#8fb0d9'; ctx.fill(); if (n.id === webSel){ ctx.lineWidth = 3; ctx.strokeStyle = '#d4607f'; ctx.stroke(); } }
   ctx.font = '12px Atkinson Hyperlegible, -apple-system, Helvetica, Arial'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.9)';
-  for (const n of webNodes){ const r = 3 + 2.2*n.w; const lbl = gLabel[n.id]; const t = lbl.length > 24 ? lbl.slice(0, 23) + '…' : lbl; ctx.strokeText(t, n.x + r + 3, n.y); ctx.fillStyle = n.seed ? '#241f2e' : '#4e4760'; ctx.fillText(t, n.x + r + 3, n.y); }
+  const narrowL = W < 520; const labelled = narrowL ? new Set(webNodes.slice().sort((a,b)=>(b.seed-a.seed)||(b.w-a.w)).slice(0, 12).map(n=>n.id)) : null;
+  for (const n of webNodes){ if (labelled && !labelled.has(n.id) && n.id !== webSel) continue; const r = 3 + 2.2*n.w; const lbl = gLabel[n.id]; const t = lbl.length > (narrowL ? 18 : 24) ? lbl.slice(0, narrowL ? 17 : 23) + '…' : lbl; const tw = ctx.measureText(t).width; const x = n.x + r + 3 + tw > W - 4 ? n.x - r - 3 - tw : n.x + r + 3; ctx.strokeText(t, x, n.y); ctx.fillStyle = n.seed ? '#241f2e' : '#4e4760'; ctx.fillText(t, x, n.y); }
 }
 // ---------- Me ----------
 function renderMe(){
@@ -739,6 +782,7 @@ function renderMe(){
       <div class="rowbtns"><button class="btn" id="setname">${me?'Change name':'Set your name'}</button><button class="btn primary" id="wiz">${profile.topics.length?'Rebuild my interest web':'Set up my interests'}</button></div>
       <div class="section-h" style="padding-left:0;font-size:19px">Interests<small>${profile.topics.length} topics, ${profile.topics.reduce((a,t)=>a+(t.terms||[]).length,0)} terms. Scores update when you apply changes.</small></div>
       <div id="editor"></div>
+      ${syncSectionHtml()}
       <div class="section-h" style="padding-left:0;font-size:19px">Share and back up</div>
       <div class="rowbtns"><button class="btn" id="share">Share my picks</button><button class="btn" id="backup">Back up</button><button class="btn" id="restore">Restore</button><input type="file" id="restorefile" accept="application/json" class="hide"></div>
       <p class="legend">A share link carries your attend and maybe picks plus your interests. Whoever opens it sees them alongside their own, which stay untouched. Back up saves everything to a file you can restore on another device.</p>
@@ -750,6 +794,7 @@ function renderMe(){
   v.querySelector('#backup').addEventListener('click', () => download('ash2026-planner-backup.json', JSON.stringify({profile, decisions, notes, me, exported:new Date().toISOString()}, null, 1), 'application/json'));
   v.querySelector('#restore').addEventListener('click', () => v.querySelector('#restorefile').click());
   v.querySelector('#restorefile').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; f.text().then(t => { try { const j = JSON.parse(t); if (j.profile) profile = j.profile; if (!profile.graph) profile.graph = {strength:1, alpha:.35, hops:2, muted:[]}; if (j.decisions) decisions = j.decisions; if (j.notes) notes = j.notes; if (j.me){ me = j.me; store.set('me', me); } store.set('decisions', decisions); store.set('notes', notes); firstRun = false; rescore('Restored'); } catch(err){ toast('That file could not be read'); } }); });
+  bindSyncSection(v);
   renderEditor();
 }
 function askName(){ const vv = prompt('Your name (used in share links and the calendar file):', me || ''); if (vv !== null){ me = vv.trim(); store.set('me', me); renderWho(); if (view==='me') renderMe(); } }
@@ -851,6 +896,62 @@ async function loadShare(){
     renderAll();
   } catch(e){ console.warn('share link unreadable', e); }
 }
+// ---------- Sync across devices + live calendar feed (Supabase edge functions, optional) ----------
+const SYNC_BASE = 'https://fecggoxvaupuorlcoboq.supabase.co/functions/v1';
+let sync = store.get('sync', null);           // {key, feed_token, last}
+let ts = store.get('ts', {});                 // per-entry change times
+let profileTs = store.get('profile_ts', 0);
+let syncTimer = null, syncing = false, syncError = '';
+function touch(id){ ts[id] = Date.now(); store.set('ts', ts); scheduleSync(); }
+function scheduleSync(){ if (!sync) return; clearTimeout(syncTimer); syncTimer = setTimeout(() => doSync().catch(e => { syncError = String(e.message||e); renderSyncStatus(); }), 2500); }
+function evFields(it){ const p = it.parent_id ? byId.get(it.parent_id) : null; return {t: it.title, date: it.date, s: it.start, e: it.end, loc: it.location, prog: it.program, num: it.number, sess: it.session_title, pres: (it.presenters||[]).slice(0,3), url: it.ash_url, pid: it.parent_id, pt: p ? p.title : undefined, ps: p ? p.start : undefined, pe: p ? p.end : undefined, poster: isPoster(it), abs: it.abstract ? it.abstract.slice(0, 300) : undefined}; }
+function buildPicks(){ const out = {}; for (const id of new Set([...Object.keys(decisions), ...Object.keys(notes), ...Object.keys(ts)])){ const it = byId.get(id); if (!it) continue; out[id] = {d: decisions[id] || null, n: notes[id] || '', ts: ts[id] || 0, ev: evFields(it)}; } return out; }
+async function doSync(opts){
+  opts = opts || {}; if (!opts.create && !opts.key && !sync) return;
+  syncing = true; syncError = ''; renderSyncStatus();
+  const body = {name: me, profile, profile_ts: profileTs, picks: buildPicks()};
+  if (opts.create) body.create = true; else body.key = opts.key || sync.key;
+  let j;
+  try {
+    const r = await fetch(SYNC_BASE + '/sync', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error === 'unknown code' ? 'That code is not recognised' : (j.error || ('server ' + r.status)));
+  } catch(e){ syncing = false; syncError = String(e.message||e); renderSyncStatus(); throw e; }
+  sync = {key: j.key, feed_token: j.feed_token, last: Date.now()}; store.set('sync', sync);
+  let changed = false, rescoreNeeded = false;
+  for (const [id, p] of Object.entries(j.picks || {})){ if (!byId.has(id) || !p) continue; if ((p.ts||0) > (ts[id]||0)){ ts[id] = p.ts; if (p.d) decisions[id] = p.d; else delete decisions[id]; if (p.n) notes[id] = p.n; else delete notes[id]; changed = true; } }
+  if ((j.profile_ts||0) > profileTs && j.profile){ profile = j.profile; if (!profile.graph) profile.graph = {strength:1, alpha:.35, hops:2, muted:[]}; profileTs = j.profile_ts; store.set('profile', profile); store.set('profile_ts', profileTs); changed = true; rescoreNeeded = true; firstRun = false; }
+  if (j.name && !me){ me = j.name; store.set('me', me); renderWho(); }
+  store.set('decisions', decisions); store.set('notes', notes); store.set('ts', ts);
+  syncing = false;
+  if (changed){ if (rescoreNeeded) scoreAll(); renderAll(); } else renderSyncStatus();
+  return j;
+}
+function feedUrl(withMaybe){ return sync ? `${SYNC_BASE}/ics?t=${sync.feed_token}${withMaybe ? '&m=1' : ''}` : ''; }
+async function copyText(t, msg){ try { await navigator.clipboard.writeText(t); toast(msg || 'Copied'); } catch(e){ prompt('Copy this:', t); } }
+function renderSyncStatus(){ const el = document.getElementById('syncstatus'); if (!el) return; el.textContent = syncing ? 'Syncing…' : syncError ? 'Could not sync: ' + syncError : sync && sync.last ? 'Last synced ' + new Date(sync.last).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : ''; }
+function syncSectionHtml(){
+  if (!sync) return `<div class="section-h" style="padding-left:0;font-size:19px">Sync across devices<small>Optional. A sync code links your phone and laptop and powers a live calendar feed. Without it, everything stays in this browser.</small></div>
+    <div class="rowbtns"><button class="btn primary" id="syncCreate">Create a sync code</button><button class="btn" id="syncEnter">I have a code</button></div><div class="legend" id="syncstatus"></div>`;
+  const withMaybe = store.get('feedMaybe', true);
+  return `<div class="section-h" style="padding-left:0;font-size:19px">Synced<small>Enter this code on your other devices. Anyone who has it can read and change these picks, so keep it to yourself.</small></div>
+    <div class="rowbtns"><span class="badge" style="font-size:16px;padding:6px 12px;font-variant-numeric:tabular-nums">${esc(sync.key)}</span><button class="btn sm" id="syncCopy">Copy code</button><button class="btn sm" id="syncNow">Sync now</button><button class="btn sm danger" id="syncUnlink">Unlink this device</button></div>
+    <div class="legend" id="syncstatus"></div>
+    <div class="section-h" style="padding-left:0;font-size:19px">Live calendar feed<small>A subscription link that updates itself when your picks change, instead of re-importing files.</small></div>
+    <label class="row" style="border:0;padding:4px 0"><input type="checkbox" id="feedMaybe" ${withMaybe?'checked':''}> include maybe picks</label>
+    <div class="rowbtns"><button class="btn primary" id="feedCopy">Copy feed link</button><a class="btn" id="feedOpen" href="${esc(feedUrl(withMaybe))}" target="_blank" rel="noopener">Open feed</a></div>
+    <div class="legend"><b>Outlook</b>: Add calendar, Subscribe from web, paste the link. <b>Google Calendar</b>: Other calendars, From URL. <b>Apple</b>: on iPhone, Settings, Calendar, Accounts, Add Subscribed Calendar; on Mac, File, New Calendar Subscription. Calendar apps refresh subscriptions every few hours.</div>`;
+}
+function bindSyncSection(v){
+  const on = (id, fn) => { const el = v.querySelector(id); if (el) el.addEventListener('click', fn); };
+  on('#syncCreate', async () => { if (!me){ askName(); } try { await doSync({create:true}); toast('Sync code created'); renderMe(); } catch(e){ toast('Could not reach the sync service'); } });
+  on('#syncEnter', async () => { const k = (prompt('Enter your sync code (like ABCD-EFGH-JKLM):', '') || '').trim().toUpperCase(); if (!k) return; try { await doSync({key:k}); toast('Linked. Your picks from both devices are merged.'); renderMe(); } catch(e){ toast(e.message || 'Could not link'); } });
+  on('#syncCopy', () => copyText(sync.key, 'Sync code copied'));
+  on('#syncNow', () => doSync().then(() => toast('Synced')).catch(e => toast(e.message || 'Sync failed')));
+  on('#syncUnlink', () => { if (!confirm('Unlink this device? Your picks stay here; the account stays on the server for your other devices.')) return; sync = null; store.set('sync', null); renderMe(); });
+  on('#feedCopy', () => copyText(feedUrl(store.get('feedMaybe', true)), 'Feed link copied'));
+  const fm = v.querySelector('#feedMaybe'); if (fm) fm.addEventListener('change', e => { store.set('feedMaybe', e.target.checked); const a = v.querySelector('#feedOpen'); if (a) a.href = feedUrl(e.target.checked); });
+  renderSyncStatus();
+}
 // ---------- boot ----------
 function renderWho(){ document.getElementById('who').textContent = me || 'You'; }
 function renderStats(){ const n = Object.values(decisions).filter(d=>d==='attend').length + Object.values(decisions).filter(d=>d==='maybe').length; const c = document.getElementById('navcount'); c.textContent = n; c.classList.toggle('hide', !n); document.getElementById('stats').textContent = profile.topics.length ? '' : 'no interests yet'; }
@@ -859,6 +960,8 @@ document.getElementById('who').addEventListener('click', askName);
 document.getElementById('searchbtn').addEventListener('click', () => { switchView('picks'); const q = document.getElementById('q'); if (q){ q.focus(); q.scrollIntoView({block:'center'}); } });
 window.addEventListener('resize', () => { if (view === 'web') drawMap(); });
 scoreAll(); renderAll(); loadShare().then(() => { if (firstRun && !shared) setTimeout(openWizard, 400); });
+if (sync) doSync().catch(e => console.warn('sync', e));
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && sync) doSync().catch(() => {}); });
 </script>
 </body>
 </html>
