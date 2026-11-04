@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASH 2026 Planner</title>
+<style>
+:root{--bg:#f4f5f7;--panel:#fff;--ink:#1b1f24;--muted:#5d6670;--line:#e1e5ea;--accent:#8a1c1c;--accent2:#1f5f8b;--attend:#1e7d46;--maybe:#b7791f;--skip:#8d969e;--chip:#eef1f4;--hl:#fff3c4}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--accent);color:#fff;position:sticky;top:0;z-index:5;flex-wrap:wrap}
+header h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.2px}
+.tabs button{background:transparent;border:1px solid rgba(255,255,255,.55);color:#fff;padding:4px 12px;border-radius:999px;cursor:pointer;margin-right:4px;font-size:13px}
+.tabs button.active{background:#fff;color:var(--accent);font-weight:600}
+header .stats{margin-left:auto;font-size:12px;opacity:.92}
+#app{display:grid;grid-template-columns:270px minmax(0,1fr) 460px;gap:10px;padding:10px;height:calc(100vh - 46px)}
+aside,main,#detail{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;min-height:0}
+aside{padding:12px}
+main{padding:0}
+#detail{padding:14px 16px}
+h3.sec{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 6px}
+h3.sec:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{background:var(--chip);border:1px solid transparent;border-radius:999px;padding:2px 9px;font-size:12px;cursor:pointer;user-select:none;white-space:nowrap}
+.chip.on{background:var(--accent2);color:#fff}
+.chip.small{font-size:11px;padding:1px 7px;cursor:default}
+.chip.term{background:var(--hl);border-color:#e8d58a;cursor:default}
+input[type=text],input[type=search],input[type=number],textarea,select{font:inherit;border:1px solid var(--line);border-radius:6px;padding:5px 7px;width:100%;background:#fff;color:var(--ink)}
+textarea{resize:vertical}
+label.row{display:flex;align-items:center;gap:6px;font-size:13px;margin:3px 0;cursor:pointer}
+button.btn{font:inherit;border:1px solid var(--line);background:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px}
+button.btn.primary{background:var(--accent2);border-color:var(--accent2);color:#fff}
+button.btn.danger{color:var(--accent)}
+button.btn:disabled{opacity:.5;cursor:default}
+.toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:2}
+.toolbar .count{color:var(--muted);font-size:12px;margin-left:auto}
+.row-item{display:grid;grid-template-columns:54px 1fr auto;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;align-items:start}
+.row-item:hover{background:#fafbfc}
+.row-item.sel{background:#f1f6fb}
+.row-item.attend{border-left:4px solid var(--attend)}
+.row-item.maybe{border-left:4px solid var(--maybe)}
+.row-item.skip{opacity:.5;border-left:4px solid var(--skip)}
+.score{font-weight:700;font-size:15px;text-align:right;line-height:1.1}
+.score small{display:block;font-weight:400;color:var(--muted);font-size:10px}
+.bar{height:4px;background:#e9ecef;border-radius:2px;margin-top:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent2)}
+.title{font-weight:600;line-height:1.3}
+.meta{color:var(--muted);font-size:12px;margin-top:2px}
+.type{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:4px;background:var(--chip);color:var(--muted);margin-right:6px;vertical-align:middle}
+.type.session{background:#e8eef7;color:#2a4d7a}.type.abstract{background:#eaf5ec;color:#246b3b}.type.talk{background:#f6ecf7;color:#6b2a74}
+.cme{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;background:#fdecec;color:var(--accent);margin-left:4px;vertical-align:middle}
+.decide{display:flex;gap:3px}
+.decide button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:6px;width:30px;height:28px;cursor:pointer;font-size:14px;line-height:1}
+.decide button.on.attend{background:var(--attend);color:#fff;border-color:var(--attend)}
+.decide button.on.maybe{background:var(--maybe);color:#fff;border-color:var(--maybe)}
+.decide button.on.skip{background:var(--skip);color:#fff;border-color:var(--skip)}
+.more{display:block;width:100%;padding:12px;background:#fafbfc;border:0;border-top:1px solid var(--line);cursor:pointer;font:inherit;color:var(--accent2)}
+#detail h2{font-size:17px;line-height:1.3;margin:4px 0 8px}
+#detail .kv{display:grid;grid-template-columns:90px 1fr;gap:3px 10px;font-size:13px;margin:8px 0}
+#detail .kv b{color:var(--muted);font-weight:500}
+#detail .abstract{white-space:pre-wrap;font-size:13.5px;line-height:1.55;border-left:3px solid var(--line);padding-left:10px;margin:6px 0}
+#detail a{color:var(--accent2)}
+.child{display:grid;grid-template-columns:44px 1fr auto;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px;align-items:start;cursor:pointer}
+.child .t{color:var(--muted);font-size:12px}
+.why{font-size:12.5px;margin:4px 0}
+.why b{font-weight:600}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+/* profile */
+.topic{border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:8px;background:#fcfcfd}
+.topic .head{display:flex;gap:6px;align-items:center;margin-bottom:5px}
+.topic .head input[type=text]{flex:1}
+.topic .head select{width:70px}
+.topic textarea{font-size:12.5px;min-height:46px}
+.pw{display:grid;grid-template-columns:1fr 70px;gap:4px 8px;align-items:center;font-size:12.5px}
+/* calendar */
+#cal{display:none;grid-column:1 / -1;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;padding:12px}
+.cal-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:52px repeat(var(--days),minmax(170px,1fr));gap:0;position:relative;border-top:1px solid var(--line)}
+.gcol{position:relative;border-left:1px solid var(--line);height:calc(var(--hours) * 60px)}
+.gcol.axis{border-left:0}
+.gcol .hr{position:absolute;left:0;right:0;border-top:1px solid #eef0f3;font-size:10px;color:var(--muted);padding-left:4px}
+.dayhead{font-weight:600;padding:6px 8px;border-left:1px solid var(--line);background:#fafbfc;font-size:13px}
+.ev{position:absolute;border-radius:6px;padding:4px 6px;font-size:11.5px;line-height:1.25;overflow:hidden;cursor:pointer;border:1px solid rgba(0,0,0,.08)}
+.ev.attend{background:#dff3e6;border-color:#9fd3b2}
+.ev.maybe{background:#fbefd6;border-color:#ecd39b}
+.ev.conflict{outline:2px solid var(--accent)}
+.ev .t{color:var(--muted);font-size:10.5px}
+.ev .loc{color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plist{margin-top:14px}
+.plist h4{margin:10px 0 4px;font-size:14px}
+.plist li{font-size:13px;margin:2px 0}
+.legend{font-size:12px;color:var(--muted)}
+.conflicts{background:#fdecec;border:1px solid #f3b9b9;border-radius:8px;padding:8px 12px;margin:8px 0;font-size:13px}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;display:none;z-index:9}
+@media (max-width:1100px){#app{grid-template-columns:240px 1fr;height:auto}#detail{grid-column:1 / -1;max-height:70vh}}
+@media (max-width:760px){#app{grid-template-columns:1fr}aside{max-height:40vh}}
+mark{background:var(--hl);padding:0 1px}
+</style>
+</head>
+<body>
+<header>
+  <h1>ASH 2026 Planner</h1>
+  <div class="tabs">
+    <button data-tab="rank" class="active">Rank &amp; review</button>
+    <button data-tab="cal">My calendar</button>
+    <button data-tab="profile">Interests</button>
+  </div>
+  <div class="stats" id="stats"></div>
+</header>
+<div id="app">
+  <aside id="side"></aside>
+  <main id="main"></main>
+  <section id="detail"><div class="empty">Select an item to see details.</div></section>
+  <section id="cal"></section>
+</div>
+<div id="toast"></div>
+<script src="data/core.js"></script>
+<script src="data/abstracts.js"></script>
+<script>
+'use strict';
+// ---------- default interest profile (edit in the Interests tab) ----------
+const DEFAULT_PROFILE = {
+  topics: [
+    {name:'Allogeneic HCT & GVHD', weight:5, terms:['allogeneic','allo-HCT','alloHCT','hematopoietic cell transplant','hematopoietic stem cell transplant','stem cell transplant','HSCT','HCT','GVHD','graft-versus-host','graft versus host','graft-versus-leukemia','GVL','post-transplant cyclophosphamide','PTCy','conditioning regimen','haploidentical','cord blood','donor selection','chimerism','non-relapse mortality','GRFS','ruxolitinib','abatacept','belumosudil','axatilimab','transplant']},
+    {name:'Immune reconstitution & T-cell biology', weight:5, terms:['immune reconstitution','immune recovery','T-cell reconstitution','T cell reconstitution','thymic','thymopoiesis','TREC','TCR repertoire','T-cell receptor repertoire','regulatory T','Treg','T-cell exhaustion','memory T cell','naive T cell','PD-1','lymphocyte recovery','NK cell reconstitution','CMV reactivation','viral reactivation','alloreactive','T cell depletion','T-cell depletion']},
+    {name:'Cellular therapy (CAR-T, bispecifics)', weight:4, terms:['CAR-T','CAR T','chimeric antigen receptor','cellular therapy','cell therapy','adoptive','bispecific','T-cell engager','cytokine release syndrome','ICANS','virus-specific T cells','NK cell therapy','allogeneic CAR','TIL','gene-modified']},
+    {name:'Immune monitoring & flow cytometry', weight:4, terms:['flow cytometry','spectral cytometry','spectral flow','mass cytometry','CyTOF','immunophenotyping','immune profiling','immune monitoring','single-cell','scRNA-seq','CITE-seq','multiomic','immunopeptidom','biomarker','high-dimensional']},
+    {name:'AI, data science & real-world data', weight:3, terms:['machine learning','artificial intelligence','deep learning','natural language processing','large language model','LLM','predictive model','prediction model','real-world','registry','CIBMTR','EBMT','electronic health record','EHR','digital','computational']},
+    {name:'Outcomes & health services', weight:2, terms:['outcomes research','quality of life','patient-reported','survivorship','late effects','cost-effectiveness','access to transplant','disparities','health services','telehealth']},
+    {name:'Myeloid disease context (AML/MDS, MRD)', weight:2, terms:['acute myeloid leukemia','AML','myelodysplastic','MDS','measurable residual disease','MRD','relapse after transplant','post-transplant maintenance','venetoclax','hypomethylating']},
+  ],
+  people: [],
+  institutions: ['Weill Cornell'],
+  negatives: [],
+  programWeights: {'Education Program':1.3,'Scientific Program':1.3,'Scientific Symposia':1.3,'Scientific Workshops':1.1,'Special-Interest Sessions':1.1,'Marquee Sessions':1.2,'How I Treat':1.2,'Meet the Scientist':1.1,'Education Spotlight Sessions':1.1,'Scientific Spotlight Sessions':1.1,'Oral Abstract Session':1.0,'Poster Abstract Session':0.7,'Clinical Trial Showcases':0.8,'Friday Satellite Symposia':0.6,'Satellite Symposia':0.6,'Trainee Activities and Services':0.5,'Events':0.3,'ASH-Sponsored Events':0.4,'Product Theaters':0.3,'Industry Theaters':0.3,'Industry Forums':0.3,'Company Showcases':0.3,'ASH Poster Walks':0.9,'Blood Journals Studio':0.5,'ASH Wellness Studio':0.2,'MedEd Talks':0.6,'Treating Fairly Talks':0.6}
+};
+// ---------- data ----------
+const DATA = window.ASH_DATA || {meta:{}, items:[]};
+const ABS = window.ASH_ABSTRACTS || {};
+const items = DATA.items;
+const byId = new Map(items.map(i => [i.id, i]));
+const DAYNAMES = {'2026-12-09':'Wed 9','2026-12-10':'Thu 10','2026-12-11':'Fri 11','2026-12-12':'Sat 12','2026-12-13':'Sun 13','2026-12-14':'Mon 14','2026-12-15':'Tue 15','2026-12-16':'Wed 16','2026-12-17':'Thu 17','2026-12-18':'Fri 18'};
+function stripDisclosures(s){ if(!s) return ''; const out=[]; const L=s.split('\n'); for(let i=0;i<L.length;i++){ const l=L[i].trim(); if(/^Disclosures?:/i.test(l)){ i++; continue; } if(/^No relevant conflicts/i.test(l)) continue; if(/ - (Honoraria|Research Funding|Consultancy|Membership on a Board|Current Employment|Speakers Bureau|Current equity|Patents|Other|Stock)/.test(l)) continue; out.push(L[i]); } return out.join('\n'); }
+for (const it of items) {
+  const a = ABS[it.id] || {};
+  it.abstract = a.abstract || ''; it.description = a.description || ''; it.ep_description = a.ep_description || '';
+  it.affiliations = a.affiliations || {}; it.disclosures = a.disclosures || '';
+  if (a.author_affil) (it.authors||[]).forEach((au, i) => { au.affil = a.author_affil[i] || []; });
+  if ((!it.keywords || !it.keywords.length) && it.parent_id) { const p = byId.get(it.parent_id); if (p && p.keywords) it.keywords = p.keywords; }
+  it._title = it.title || ''; it._kw = (it.keywords||[]).join(' | '); it._sess = it.session_title || '';
+  it._abs = it.abstract; it._desc = (it.description + '\n' + stripDisclosures(it.ep_description)).trim();
+  it._people = [...(it.presenters||[]), ...(it.participants||[]).map(p=>p.name), ...(it.authors||[]).map(p=>p.name), ...(it.ep_speakers||[])].join(' | ');
+  it._aff = Object.values(it.affiliations).join(' | ');
+  it._blob = (it._title + ' ' + it._kw + ' ' + it._sess + ' ' + it._people + ' ' + it._aff + ' ' + it._abs + ' ' + it._desc + ' ' + (it.number||'') + ' ' + (it.location||'')).toLowerCase();
+  it._min = it.start ? toMin(it.start) : null; it._max = it.end ? toMin(it.end) : null;
+}
+function toMin(hm){ const [h,m]=hm.split(':').map(Number); return h*60+m; }
+const programs = [...new Set(items.map(i=>i.program).filter(Boolean))].sort();
+const days = [...new Set(items.map(i=>i.date).filter(Boolean))].sort();
+// ---------- state ----------
+const store = {
+  get(k, d){ try { const v = localStorage.getItem('ash26.'+k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem('ash26.'+k, JSON.stringify(v)); } catch(e){} }
+};
+let profile = store.get('profile', null) || JSON.parse(JSON.stringify(DEFAULT_PROFILE));
+let decisions = store.get('decisions', {});
+let notes = store.get('notes', {});
+const F = Object.assign({day:'all', programs:[], types:{session:true, abstract:true, talk:true}, q:'', minScore:0, decision:'all', sort:'score', hidePosters:false, limit:150}, store.get('filters', {}));
+F.limit = 150;
+let selected = null, tab = 'rank', maxScore = 1;
+// ---------- scoring ----------
+function termRe(term){
+  const t = (term||'').trim(); if(!t) return null;
+  const toks = t.split(/[\s\-]+/).filter(Boolean).map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  if(!toks.length) return null;
+  const b1 = /^\w/.test(t) ? '\\b' : '', b2 = /\w$/.test(t) ? '\\b' : '';
+  try { return new RegExp(b1 + toks.join('[\\s\\-]*') + b2, 'gi'); } catch(e){ return null; }
+}
+function count(re, s){ if(!s || !re) return 0; let n = 0; re.lastIndex = 0; while(re.exec(s)){ n++; if(n >= 8) break; } re.lastIndex = 0; return n; }
+function compile(p){
+  const mk = arr => (arr||[]).map(t => ({term:t, re:termRe(t)})).filter(x=>x.re);
+  return {
+    topics: (p.topics||[]).filter(t => t.enabled !== false).map(t => ({name:t.name, weight:+t.weight||1, terms: mk(t.terms)})),
+    people: mk(p.people), institutions: mk(p.institutions), negatives: mk(p.negatives), programWeights: p.programWeights||{}
+  };
+}
+function scoreItem(it, P){
+  let total = 0; const why = [];
+  for (const t of P.topics){
+    let ts = 0; const matched = [];
+    for (const {term, re} of t.terms){
+      const inT = count(re, it._title) > 0, inK = count(re, it._kw) > 0, inS = count(re, it._sess) > 0, nA = count(re, it._abs), nD = count(re, it._desc);
+      const s = (inT?3:0) + (inK?2:0) + (inS?1.5:0) + (nA ? Math.min(2, 1 + 0.25*(nA-1)) : 0) + (nD?1:0);
+      if (s > 0){ ts += s; matched.push(term); }
+    }
+    if (ts > 0){ const c = t.weight * Math.min(ts, 8); total += c; why.push({topic:t.name, terms:matched, points:c}); }
+  }
+  const pw = P.programWeights[it.program] ?? 1; total *= pw;
+  let bonus = 0; const hits = [];
+  for (const {term, re} of P.people) if (count(re, it._people)) { bonus += 8; hits.push('Person: ' + term); }
+  for (const {term, re} of P.institutions) if (count(re, it._aff) || count(re, it._desc)) { bonus += 3; hits.push('Institution: ' + term); }
+  for (const {term, re} of P.negatives) if (count(re, it._title) || count(re, it._abs) || count(re, it._kw)) { bonus -= 8; hits.push('Excluded: ' + term); }
+  it._own = total + bonus; it._why = why; it._hits = hits; it._pw = pw;
+}
+function scoreAll(){
+  const P = compile(profile);
+  for (const it of items) scoreItem(it, P);
+  maxScore = 1;
+  for (const it of items){
+    if (it.children && it.children.length){
+      const cs = it.children.map(c => byId.get(c)).filter(Boolean).map(c => c._own).sort((a,b)=>b-a).slice(0,3);
+      const m = cs.length ? cs.reduce((a,b)=>a+b,0)/cs.length : 0;
+      it._childBoost = 0.6*m; it._score = it._own + it._childBoost;
+    } else { it._childBoost = 0; it._score = it._own; }
+    if (it._score > maxScore) maxScore = it._score;
+  }
+}
+// ---------- helpers ----------
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtTime = hm => { if(!hm) return ''; let [h,m] = hm.split(':').map(Number); const ap = h>=12?'pm':'am'; h = h%12 || 12; return `${h}:${String(m).padStart(2,'0')}${ap}`; };
+const fmtDay = d => DAYNAMES[d] || d || '';
+const isPoster = it => /poster/i.test(it.program||'') || /poster/i.test(it.ep_category||'');
+function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display='block'; clearTimeout(toast._t); toast._t = setTimeout(()=>t.style.display='none', 2200); }
+function download(name, text, type='text/plain'){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000); }
+function setDecision(id, d){ if (decisions[id] === d) delete decisions[id]; else decisions[id] = d; store.set('decisions', decisions); renderList(); renderStats(); if (selected === id) renderDetail(); if (tab==='cal') renderCal(); }
+// ---------- filters / list ----------
+function visible(){
+  const q = F.q.trim().toLowerCase();
+  const progSet = new Set(F.programs);
+  const arr = items.filter(it => {
+    if (F.day !== 'all' && it.date !== F.day) return false;
+    if (!F.types[it.type]) return false;
+    if (progSet.size && !progSet.has(it.program)) return false;
+    if (F.hidePosters && isPoster(it)) return false;
+    if (it._score < F.minScore) return false;
+    const d = decisions[it.id];
+    if (F.decision === 'undecided' && d) return false;
+    if (F.decision === 'chosen' && !(d === 'attend' || d === 'maybe')) return false;
+    if (F.decision === 'attend' && d !== 'attend') return false;
+    if (F.decision === 'maybe' && d !== 'maybe') return false;
+    if (F.decision === 'skip' && d !== 'skip') return false;
+    if (q && !it._blob.includes(q)) return false;
+    return true;
+  });
+  const byTime = (a,b) => (a.date||'').localeCompare(b.date||'') || ((a._min??0)-(b._min??0)) || (a.type==='session'?-1:1) || a._title.localeCompare(b._title);
+  arr.sort(F.sort === 'time' ? byTime : (a,b) => (b._score - a._score) || byTime(a,b));
+  return arr;
+}
+function renderSide(){
+  const s = document.getElementById('side');
+  s.innerHTML = `
+    <h3 class="sec">Search</h3>
+    <input type="search" id="q" placeholder="title, author, keyword, abstract…" value="${esc(F.q)}">
+    <h3 class="sec">Day</h3>
+    <div class="chips" id="daychips"><span class="chip ${F.day==='all'?'on':''}" data-day="all">All</span>${days.map(d=>`<span class="chip ${F.day===d?'on':''}" data-day="${d}">${esc(fmtDay(d))}</span>`).join('')}</div>
+    <h3 class="sec">Type</h3>
+    <label class="row"><input type="checkbox" data-type="session" ${F.types.session?'checked':''}> Sessions (${DATA.meta.by_type?.session ?? ''})</label>
+    <label class="row"><input type="checkbox" data-type="abstract" ${F.types.abstract?'checked':''}> Abstracts (${DATA.meta.by_type?.abstract ?? ''})</label>
+    <label class="row"><input type="checkbox" data-type="talk" ${F.types.talk?'checked':''}> Talks within sessions (${DATA.meta.by_type?.talk ?? ''})</label>
+    <label class="row"><input type="checkbox" id="hidePosters" ${F.hidePosters?'checked':''}> Hide posters</label>
+    <h3 class="sec">Decision</h3>
+    <select id="decision">${['all','undecided','chosen','attend','maybe','skip'].map(v=>`<option value="${v}" ${F.decision===v?'selected':''}>${v==='all'?'All items':v==='chosen'?'Attend + maybe':v[0].toUpperCase()+v.slice(1)}</option>`).join('')}</select>
+    <h3 class="sec">Minimum score <span id="minScoreVal" style="float:right;color:var(--muted)">${F.minScore}</span></h3>
+    <input type="range" id="minScore" min="0" max="60" step="1" value="${F.minScore}" style="width:100%">
+    <h3 class="sec">Program <span style="float:right;font-weight:400;text-transform:none;letter-spacing:0"><a href="#" id="progAll">all</a> · <a href="#" id="progNone">none</a></span></h3>
+    <div class="chips" id="progchips">${programs.map(p=>`<span class="chip ${(!F.programs.length||F.programs.includes(p))?'on':''}" data-prog="${esc(p)}">${esc(p)}</span>`).join('')}</div>
+    <h3 class="sec">Export</h3>
+    <div class="chips">
+      <button class="btn" id="exportIcs">Calendar (.ics)</button>
+      <button class="btn" id="exportCsv">Chosen (.csv)</button>
+      <button class="btn" id="exportJson">Backup (.json)</button>
+      <button class="btn" id="importJson">Restore</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json" style="display:none">
+    <p class="legend" style="margin-top:10px">Scores are relative and based on your interest profile. Decisions and notes are saved in this browser.</p>`;
+  s.querySelector('#q').addEventListener('input', e => { F.q = e.target.value; F.limit = 150; saveF(); renderList(); });
+  s.querySelector('#daychips').addEventListener('click', e => { const c = e.target.closest('.chip'); if(!c) return; F.day = c.dataset.day; saveF(); renderSide(); renderList(); });
+  s.querySelectorAll('input[data-type]').forEach(cb => cb.addEventListener('change', e => { F.types[e.target.dataset.type] = e.target.checked; saveF(); renderList(); }));
+  s.querySelector('#hidePosters').addEventListener('change', e => { F.hidePosters = e.target.checked; saveF(); renderList(); });
+  s.querySelector('#decision').addEventListener('change', e => { F.decision = e.target.value; saveF(); renderList(); });
+  s.querySelector('#minScore').addEventListener('input', e => { F.minScore = +e.target.value; s.querySelector('#minScoreVal').textContent = F.minScore; saveF(); renderList(); });
+  s.querySelector('#progchips').addEventListener('click', e => { const c = e.target.closest('.chip'); if(!c) return; const p = c.dataset.prog; let set = F.programs.length ? new Set(F.programs) : new Set(programs); if (set.has(p)) set.delete(p); else set.add(p); F.programs = set.size === programs.length ? [] : [...set]; saveF(); renderSide(); renderList(); });
+  s.querySelector('#progAll').addEventListener('click', e => { e.preventDefault(); F.programs = []; saveF(); renderSide(); renderList(); });
+  s.querySelector('#progNone').addEventListener('click', e => { e.preventDefault(); F.programs = ['__none__']; saveF(); renderSide(); renderList(); });
+  s.querySelector('#exportIcs').addEventListener('click', () => exportIcs(true));
+  s.querySelector('#exportCsv').addEventListener('click', exportCsv);
+  s.querySelector('#exportJson').addEventListener('click', () => download('ash2026-planner-backup.json', JSON.stringify({profile, decisions, notes, exported:new Date().toISOString()}, null, 1), 'application/json'));
+  s.querySelector('#importJson').addEventListener('click', () => s.querySelector('#importFile').click());
+  s.querySelector('#importFile').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; f.text().then(t => { try { const j = JSON.parse(t); if (j.profile) profile = j.profile; if (j.decisions) decisions = j.decisions; if (j.notes) notes = j.notes; store.set('profile', profile); store.set('decisions', decisions); store.set('notes', notes); scoreAll(); renderAll(); toast('Restored'); } catch(err){ toast('Could not read file'); } }); });
+}
+function saveF(){ const {limit, ...rest} = F; store.set('filters', rest); }
+function rowHtml(it){
+  const d = decisions[it.id] || '';
+  const seen = new Set(); const terms = it._why.flatMap(w => w.terms).filter(t => { const k = t.toLowerCase().replace(/[\s\-]+/g,''); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
+  const sub = it.type !== 'session' && it.session_title ? `<div class="meta">in: ${esc(it.session_title)}</div>` : '';
+  const who = it.presenters && it.presenters.length ? `<div class="meta">${esc(it.presenters.slice(0,4).join(', '))}${it.presenters.length>4?` +${it.presenters.length-4}`:''}</div>` : '';
+  return `<div class="row-item ${d} ${selected===it.id?'sel':''}" data-id="${it.id}">
+    <div><div class="score">${it._score.toFixed(0)}<small>${it._childBoost?'incl. talks':''}</small></div><div class="bar"><i style="width:${Math.min(100, 100*it._score/maxScore).toFixed(0)}%"></i></div></div>
+    <div>
+      <div class="title"><span class="type ${it.type}">${it.type==='abstract'?(it.number?'#'+esc(it.number):'abstract'):it.type}</span>${esc(it.title)}${it.cme?'<span class="cme">CME</span>':''}</div>
+      <div class="meta">${esc(fmtDay(it.date))} · ${esc(fmtTime(it.start))}–${esc(fmtTime(it.end))} · ${esc(it.location||'')} · ${esc(it.program||'')}</div>
+      ${sub}${who}
+      ${terms.length ? `<div class="chips" style="margin-top:4px">${terms.map(t=>`<span class="chip small term">${esc(t)}</span>`).join('')}${it._hits.map(h=>`<span class="chip small">${esc(h)}</span>`).join('')}</div>` : ''}
+    </div>
+    <div class="decide" data-id="${it.id}">
+      <button class="attend ${d==='attend'?'on':''}" data-d="attend" title="Attend">★</button>
+      <button class="maybe ${d==='maybe'?'on':''}" data-d="maybe" title="Maybe">?</button>
+      <button class="skip ${d==='skip'?'on':''}" data-d="skip" title="Skip">✕</button>
+    </div></div>`;
+}
+let lastVisible = [];
+function renderList(){
+  const m = document.getElementById('main');
+  lastVisible = visible();
+  const shown = lastVisible.slice(0, F.limit);
+  m.innerHTML = `<div class="toolbar">
+      <span>Sort</span>
+      <select id="sort"><option value="score" ${F.sort==='score'?'selected':''}>by score</option><option value="time" ${F.sort==='time'?'selected':''}>by time</option></select>
+      <span class="count">${lastVisible.length.toLocaleString()} items · ${Object.values(decisions).filter(d=>d==='attend').length} attend · ${Object.values(decisions).filter(d=>d==='maybe').length} maybe</span>
+    </div>
+    ${shown.map(rowHtml).join('') || '<div class="empty">Nothing matches these filters.</div>'}
+    ${lastVisible.length > shown.length ? `<button class="more" id="more">Show more (${(lastVisible.length - shown.length).toLocaleString()} remaining)</button>` : ''}`;
+  m.querySelector('#sort').addEventListener('change', e => { F.sort = e.target.value; saveF(); renderList(); });
+  const moreBtn = m.querySelector('#more'); if (moreBtn) moreBtn.addEventListener('click', () => { F.limit += 150; renderList(); });
+}
+document.getElementById('main').addEventListener('click', e => {
+  const db = e.target.closest('.decide button'); if (db){ setDecision(db.parentElement.dataset.id, db.dataset.d); return; }
+  const row = e.target.closest('.row-item'); if (row){ selected = row.dataset.id; renderDetail(); document.querySelectorAll('.row-item.sel').forEach(r=>r.classList.remove('sel')); row.classList.add('sel'); }
+});
+// ---------- detail ----------
+function highlight(text){
+  if (!text) return '';
+  let out = esc(text);
+  const P = compile(profile);
+  const terms = P.topics.flatMap(t => t.terms).concat(P.people, P.institutions);
+  for (const {re} of terms){ out = out.replace(new RegExp(re.source, 'gi'), m => `\u0001${m}\u0002`); }
+  return out.replace(/\u0001/g, '<mark>').replace(/\u0002/g, '</mark>');
+}
+function renderDetail(){
+  const el = document.getElementById('detail');
+  const it = byId.get(selected);
+  if (!it){ el.innerHTML = '<div class="empty">Select an item to see details.</div>'; return; }
+  const d = decisions[it.id] || '';
+  const parent = it.parent_id ? byId.get(it.parent_id) : null;
+  const kids = (it.children||[]).map(c => byId.get(c)).filter(Boolean);
+  const authors = (it.authors||[]).map(a => `${a.presenting?'<b>':''}${esc(a.name)}${a.presenting?'</b>':''}${a.affil?.length?`<sup>${esc(a.affil.join(','))}</sup>`:''}`).join(', ');
+  const affs = Object.entries(it.affiliations||{}).map(([k,v]) => `<div><sup>${esc(k)}</sup> ${esc(v)}</div>`).join('');
+  const parts = (it.participants||[]).map(p => `<div><b>${esc(p.role)}:</b> ${esc(p.name)}</div>`).join('');
+  const why = it._why.map(w => `<div class="why"><b>${esc(w.topic)}</b> +${w.points.toFixed(1)} — ${esc(w.terms.join(', '))}</div>`).join('') + it._hits.map(h=>`<div class="why">${esc(h)}</div>`).join('') + (it._pw !== 1 ? `<div class="why">Program weight ×${it._pw}</div>` : '') + (it._childBoost ? `<div class="why">Talks in this session +${it._childBoost.toFixed(1)}</div>` : '');
+  el.innerHTML = `
+    <div class="decide" data-id="${it.id}" style="float:right">
+      <button class="attend ${d==='attend'?'on':''}" data-d="attend" title="Attend">★</button>
+      <button class="maybe ${d==='maybe'?'on':''}" data-d="maybe" title="Maybe">?</button>
+      <button class="skip ${d==='skip'?'on':''}" data-d="skip" title="Skip">✕</button>
+    </div>
+    <div><span class="type ${it.type}">${it.type}</span>${it.number?`<span class="type">#${esc(it.number)}</span>`:''}${it.cme?'<span class="cme">CME</span>':''}</div>
+    <h2>${highlight(it.title)}</h2>
+    <div class="kv">
+      <b>When</b><div>${esc(fmtDay(it.date))} (${esc(it.date||'')}) · ${esc(fmtTime(it.start))}–${esc(fmtTime(it.end))} Central</div>
+      <b>Where</b><div>${esc(it.location||'—')}</div>
+      <b>Program</b><div>${esc(it.program||'')}${it.ep_category && it.ep_category!==it.program?` <span class="legend">(${esc(it.ep_category)})</span>`:''}</div>
+      ${parent ? `<b>Session</b><div><a href="#" data-open="${parent.id}">${esc(parent.title)}</a> <span class="legend">${esc(fmtTime(parent.start))}–${esc(fmtTime(parent.end))}</span></div>` : ''}
+      <b>Score</b><div>${it._score.toFixed(1)}</div>
+      <b>Links</b><div>${it.ash_url?`<a href="${esc(it.ash_url)}" target="_blank" rel="noopener">ASH program</a>`:''} ${it.ep_url?`· <a href="${esc(it.ep_url)}" target="_blank" rel="noopener">EventPilot app</a>`:''}</div>
+    </div>
+    ${why ? `<h3 class="sec">Why it scored</h3>${why}` : ''}
+    ${parts ? `<h3 class="sec">Participants</h3>${parts}` : ''}
+    ${authors ? `<h3 class="sec">Authors</h3><div>${authors}</div>${affs?`<div class="legend" style="margin-top:4px">${affs}</div>`:''}` : ''}
+    ${!parts && !authors && it.ep_speakers?.length ? `<h3 class="sec">Speakers</h3><div>${esc(it.ep_speakers.join(', '))}</div>` : ''}
+    ${it.abstract ? `<h3 class="sec">Abstract</h3><div class="abstract">${highlight(it.abstract)}</div>` : ''}
+    ${it.description ? `<h3 class="sec">Session description</h3><div class="abstract">${highlight(it.description)}</div>` : ''}
+    ${!it.description && it.ep_description ? `<h3 class="sec">Description (app)</h3><div class="abstract">${highlight(stripDisclosures(it.ep_description))}</div>` : ''}
+    ${it.keywords?.length ? `<h3 class="sec">Keywords</h3><div class="chips">${it.keywords.map(k=>`<span class="chip small">${esc(k)}</span>`).join('')}</div>` : ''}
+    ${kids.length ? `<h3 class="sec">${kids.length} talks / abstracts in this session</h3>${kids.slice().sort((a,b)=>((a._min??0)-(b._min??0))||(b._score-a._score)).map(k => `<div class="child" data-open="${k.id}"><div class="t">${isPoster(k)?('#'+esc(k.number||'')):esc(fmtTime(k.start))}</div><div>${esc(k.title)}<div class="t">${esc((k.presenters||[])[0]||'')} · score ${k._score.toFixed(0)}</div></div><div class="decide" data-id="${k.id}"><button class="attend ${decisions[k.id]==='attend'?'on':''}" data-d="attend">★</button><button class="maybe ${decisions[k.id]==='maybe'?'on':''}" data-d="maybe">?</button><button class="skip ${decisions[k.id]==='skip'?'on':''}" data-d="skip">✕</button></div></div>`).join('')}` : ''}
+    ${it.disclosures ? `<h3 class="sec">Disclosures</h3><div class="legend">${esc(it.disclosures)}</div>` : ''}
+    <h3 class="sec">My notes</h3>
+    <textarea id="note" rows="3" placeholder="Why this matters, questions to ask, people to meet…">${esc(notes[it.id]||'')}</textarea>`;
+  el.querySelector('#note').addEventListener('input', e => { if (e.target.value.trim()) notes[it.id] = e.target.value; else delete notes[it.id]; store.set('notes', notes); });
+}
+document.getElementById('detail').addEventListener('click', e => {
+  const db = e.target.closest('.decide button'); if (db){ e.stopPropagation(); setDecision(db.parentElement.dataset.id, db.dataset.d); return; }
+  const o = e.target.closest('[data-open]'); if (o){ e.preventDefault(); selected = o.dataset.open; renderDetail(); }
+});
+// ---------- profile editor ----------
+function renderProfile(){
+  const el = document.getElementById('detail');
+  const t = profile;
+  el.innerHTML = `
+    <h2 style="margin-top:0">Interest profile</h2>
+    <p class="legend">Each topic is a list of terms (one per line or comma-separated). A term scores when it appears in a title (3), keywords (2), session title (1.5), abstract (1–2) or description (1), summed per topic and multiplied by the topic weight. Program weights scale the total. People and institutions add a bonus; excluded terms subtract.</p>
+    <div id="topics">${t.topics.map((tp,i)=>topicHtml(tp,i)).join('')}</div>
+    <button class="btn" id="addTopic">+ Add topic</button>
+    <h3 class="sec">People to follow (one per line)</h3><textarea id="people" rows="3">${esc((t.people||[]).join('\n'))}</textarea>
+    <h3 class="sec">Institutions (matched in affiliations)</h3><textarea id="insts" rows="2">${esc((t.institutions||[]).join('\n'))}</textarea>
+    <h3 class="sec">Exclude terms (penalize)</h3><textarea id="negs" rows="2">${esc((t.negatives||[]).join('\n'))}</textarea>
+    <h3 class="sec">Program weights</h3>
+    <div class="pw">${programs.map(p=>`<span>${esc(p)}</span><input type="number" step="0.1" min="0" max="3" data-pw="${esc(p)}" value="${t.programWeights?.[p] ?? 1}">`).join('')}</div>
+    <div style="display:flex;gap:6px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn primary" id="apply">Apply &amp; rescore</button>
+      <button class="btn" id="exportProfile">Export profile</button>
+      <button class="btn danger" id="resetProfile">Reset to defaults</button>
+    </div>`;
+  el.querySelector('#addTopic').addEventListener('click', () => { readProfileForm(); profile.topics.push({name:'New topic', weight:3, terms:[]}); renderProfile(); });
+  el.querySelector('#topics').addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (b){ readProfileForm(); profile.topics.splice(+b.dataset.del, 1); renderProfile(); } });
+  el.querySelector('#apply').addEventListener('click', () => { readProfileForm(); store.set('profile', profile); scoreAll(); renderList(); renderStats(); toast('Rescored'); });
+  el.querySelector('#exportProfile').addEventListener('click', () => { readProfileForm(); download('ash2026-interests.json', JSON.stringify(profile, null, 1), 'application/json'); });
+  el.querySelector('#resetProfile').addEventListener('click', () => { if (!confirm('Replace your interest profile with the defaults?')) return; profile = JSON.parse(JSON.stringify(DEFAULT_PROFILE)); store.set('profile', profile); scoreAll(); renderProfile(); renderList(); renderStats(); });
+}
+function topicHtml(tp, i){
+  return `<div class="topic" data-i="${i}">
+    <div class="head"><input type="checkbox" data-en ${tp.enabled===false?'':'checked'} title="enabled"><input type="text" data-name value="${esc(tp.name)}" placeholder="Topic name"><select data-w>${[1,2,3,4,5].map(w=>`<option ${(+tp.weight||1)===w?'selected':''} value="${w}">×${w}</option>`).join('')}</select><button class="btn danger" data-del="${i}" title="Remove">✕</button></div>
+    <textarea data-terms placeholder="terms, one per line or comma-separated">${esc((tp.terms||[]).join('\n'))}</textarea></div>`;
+}
+function readProfileForm(){
+  const el = document.getElementById('detail');
+  const topics = [...el.querySelectorAll('.topic')].map(t => ({
+    name: t.querySelector('[data-name]').value.trim() || 'Topic', weight: +t.querySelector('[data-w]').value, enabled: t.querySelector('[data-en]').checked,
+    terms: t.querySelector('[data-terms]').value.split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean)
+  }));
+  const lines = id => el.querySelector(id).value.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+  const pw = {}; el.querySelectorAll('[data-pw]').forEach(i => { pw[i.dataset.pw] = +i.value; });
+  profile = {topics, people: lines('#people'), institutions: lines('#insts'), negatives: lines('#negs'), programWeights: pw};
+}
+// ---------- calendar ----------
+function chosenItems(includeMaybe){ return items.filter(it => decisions[it.id] === 'attend' || (includeMaybe && decisions[it.id] === 'maybe')); }
+function isAncestor(a, b){ let p = b.parent_id; while (p){ if (p === a.id) return true; p = byId.get(p)?.parent_id; } return false; }
+function overlaps(a, b){ return a.date === b.date && a._min != null && b._min != null && a._min < b._max && b._min < a._max; }
+function conflictsFor(list){
+  const bad = new Set();
+  for (let i=0;i<list.length;i++) for (let j=i+1;j<list.length;j++){
+    const a = list[i], b = list[j];
+    if (!overlaps(a,b)) continue;
+    if (isAncestor(a,b) || isAncestor(b,a)) continue;
+    if (a._group && a._group === b._group) continue;
+    if (decisions[a.id] !== 'attend' || decisions[b.id] !== 'attend') continue;
+    bad.add(a.id); bad.add(b.id);
+  }
+  return bad;
+}
+function calendarEvents(includeMaybe){
+  const ch = chosenItems(includeMaybe);
+  const groups = new Map(); const evs = [];
+  for (const it of ch){
+    if (isPoster(it) && it.type === 'abstract' && it.parent_id){
+      const g = groups.get(it.parent_id) || {posters:[], parent: byId.get(it.parent_id)};
+      g.posters.push(it); groups.set(it.parent_id, g);
+    } else evs.push(it);
+  }
+  for (const [pid, g] of groups){
+    const p = g.parent;
+    if (ch.includes(p)) { p._posters = g.posters; continue; }
+    const ev = Object.assign(Object.create(null), p, {id:'grp-'+pid, title:(p?.title||'Poster session') + ' — ' + g.posters.length + ' poster' + (g.posters.length>1?'s':''), _posters:g.posters, _group:'grp-'+pid, _isGroup:true});
+    ev.date = p?.date || g.posters[0].date; ev._min = p?._min ?? g.posters[0]._min; ev._max = p?._max ?? g.posters[0]._max; ev.start = p?.start||g.posters[0].start; ev.end = p?.end||g.posters[0].end; ev.location = p?.location||g.posters[0].location;
+    decisions[ev.id] = g.posters.some(x=>decisions[x.id]==='attend') ? 'attend' : 'maybe';
+    evs.push(ev);
+  }
+  return evs;
+}
+function renderCal(){
+  const el = document.getElementById('cal');
+  const includeMaybe = store.get('calMaybe', true);
+  const evs = calendarEvents(includeMaybe).filter(e => e.date && e._min != null);
+  const conf = conflictsFor(evs);
+  const calDays = days.filter(d => evs.some(e => e.date === d));
+  const show = calDays.length ? calDays : days.slice(2, 7);
+  const H0 = 7, H1 = 21;
+  let html = `<div class="cal-head"><h2 style="margin:0;font-size:17px">My calendar</h2>
+    <label class="row"><input type="checkbox" id="calMaybe" ${includeMaybe?'checked':''}> include "maybe"</label>
+    <button class="btn" id="icsAttend">Export .ics (attend)</button><button class="btn" id="icsAll">Export .ics (attend + maybe)</button>
+    <button class="btn" id="printCal">Print list</button>
+    <span class="legend" style="margin-left:auto">${evs.length} entries · green = attend, amber = maybe, red outline = time conflict · times Central</span></div>`;
+  if (conf.size) html += `<div class="conflicts">⚠ ${conf.size} items marked "attend" overlap in time. Click an entry to review.</div>`;
+  html += `<div class="grid" style="--days:${show.length};--hours:${H1-H0}"><div class="dayhead" style="border-left:0"></div>${show.map(d=>`<div class="dayhead">${esc(fmtDay(d))} · ${esc(d)}</div>`).join('')}
+    <div class="gcol axis">${Array.from({length:H1-H0},(_,i)=>`<div class="hr" style="top:${i*60}px">${fmtTime(String(H0+i).padStart(2,'0')+':00')}</div>`).join('')}</div>`;
+  for (const d of show){
+    const dayEvs = evs.filter(e => e.date === d).sort((a,b)=>a._min-b._min || b._max-a._max);
+    // column assignment for overlapping events
+    const cols = []; const placed = [];
+    for (const e of dayEvs){
+      let c = 0; while (cols[c] && cols[c] > e._min) c++;
+      cols[c] = e._max; placed.push({e, c});
+    }
+    // cluster width = number of columns among overlapping events
+    for (const p of placed){ const ov = placed.filter(q => overlaps(q.e, p.e)); p.n = Math.max(1, ...ov.map(q=>q.c+1)); }
+    html += `<div class="gcol">${Array.from({length:H1-H0},(_,i)=>`<div class="hr" style="top:${i*60}px"></div>`).join('')}
+      ${placed.map(({e,c,n}) => { const top = Math.max(0, e._min - H0*60), h = Math.max(22, Math.min(e._max, H1*60) - Math.max(e._min, H0*60)); const d2 = decisions[e.id]||'maybe';
+        return `<div class="ev ${d2} ${conf.has(e.id)?'conflict':''}" data-ev="${esc(e.id)}" style="top:${top}px;height:${h-2}px;left:calc(${(100/n)*c}% + 2px);width:calc(${100/n}% - 5px)" title="${esc(e.title)}"><div class="t">${esc(fmtTime(e.start))}–${esc(fmtTime(e.end))}</div><div>${esc(e.title)}</div><div class="loc">${esc(e.location||'')}</div></div>`; }).join('')}</div>`;
+  }
+  html += `</div>`;
+  // list view
+  html += `<div class="plist" id="plist"><h3 class="sec">Agenda list</h3>`;
+  for (const d of show){
+    const dayEvs = evs.filter(e => e.date === d).sort((a,b)=>a._min-b._min);
+    if (!dayEvs.length) continue;
+    html += `<h4>${esc(fmtDay(d))}, ${esc(d)}</h4><ul>` + dayEvs.map(e => `<li data-ev="${esc(e.id)}" style="cursor:pointer"><b>${esc(fmtTime(e.start))}–${esc(fmtTime(e.end))}</b> ${decisions[e.id]==='maybe'?'(maybe) ':''}${esc(e.title)} <span class="legend">· ${esc(e.location||'')}</span>${e._posters?`<ul>${e._posters.map(p=>`<li data-ev="${esc(p.id)}" style="cursor:pointer">#${esc(p.number||'')} ${esc(p.title)} <span class="legend">— ${esc((p.presenters||[])[0]||'')}</span></li>`).join('')}</ul>`:''}</li>`).join('') + `</ul>`;
+  }
+  html += `</div>`;
+  el.innerHTML = html;
+  el.querySelector('#calMaybe').addEventListener('change', e => { store.set('calMaybe', e.target.checked); renderCal(); });
+  el.querySelector('#icsAttend').addEventListener('click', () => exportIcs(false));
+  el.querySelector('#icsAll').addEventListener('click', () => exportIcs(true));
+  el.querySelector('#printCal').addEventListener('click', () => { const w = window.open('', '_blank'); w.document.write(`<title>ASH 2026 agenda</title><style>body{font:13px -apple-system,Helvetica,Arial;padding:20px}h4{margin:14px 0 4px}li{margin:3px 0}.legend{color:#666}</style>` + el.querySelector('#plist').innerHTML); w.document.close(); w.print(); });
+  el.addEventListener('click', e => { const t = e.target.closest('[data-ev]'); if (!t) return; e.stopPropagation(); let id = t.dataset.ev; if (id.startsWith('grp-')) id = id.slice(4); if (!byId.has(id)) return; selected = id; switchTab('rank'); renderDetail(); }, {once:true});
+}
+// ---------- exports ----------
+function icsDate(date, hm){ const [y,mo,d] = date.split('-').map(Number); const [h,mi] = hm.split(':').map(Number); const dt = new Date(Date.UTC(y, mo-1, d, h+6, mi)); return dt.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''); }
+const icsEsc = s => String(s||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/[,;]/g, m => '\\'+m);
+function exportIcs(includeMaybe){
+  const evs = calendarEvents(includeMaybe).filter(e => e.date && e.start && e.end);
+  if (!evs.length){ toast('Nothing marked yet'); return; }
+  const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//ASH 2026 Planner//EN','CALSCALE:GREGORIAN','X-WR-CALNAME:ASH 2026 (my picks)'];
+  for (const e of evs){
+    const d = decisions[e.id] === 'maybe' ? '[maybe] ' : '';
+    let desc = [e.program, e.session_title ? 'Session: ' + e.session_title : '', (e.presenters||[]).length ? 'Presenters: ' + e.presenters.slice(0,8).join(', ') : ''].filter(Boolean).join('\n');
+    if (e._posters) desc += '\nPosters:\n' + e._posters.map(p => `#${p.number||''} ${p.title} — ${(p.presenters||[])[0]||''}`).join('\n');
+    if (e.abstract) desc += '\n\n' + e.abstract.slice(0, 600) + (e.abstract.length > 600 ? '…' : '');
+    if (notes[e.id]) desc += '\n\nNotes: ' + notes[e.id];
+    if (e.ash_url) desc += '\n' + e.ash_url;
+    lines.push('BEGIN:VEVENT', `UID:ash2026-${e.id}@planner`, `DTSTAMP:${icsDate('2026-11-04','12:00')}`, `DTSTART:${icsDate(e.date, e.start)}`, `DTEND:${icsDate(e.date, e.end)}`,
+      `SUMMARY:${icsEsc(d + (e.number && !e._isGroup ? '#'+e.number+' ' : '') + e.title)}`, `LOCATION:${icsEsc(e.location||'')}`, `DESCRIPTION:${icsEsc(desc)}`, e.ash_url ? `URL:${e.ash_url}` : '', 'END:VEVENT');
+  }
+  lines.push('END:VCALENDAR');
+  download('ash2026-my-schedule.ics', lines.filter(Boolean).join('\r\n'), 'text/calendar');
+}
+function exportCsv(){
+  const rows = items.filter(it => decisions[it.id] && decisions[it.id] !== 'skip').sort((a,b)=>(a.date||'').localeCompare(b.date||'')||((a._min??0)-(b._min??0)));
+  if (!rows.length){ toast('Nothing marked yet'); return; }
+  const cols = ['decision','date','start','end','location','program','type','number','title','session_title','presenters','score','note','ash_url'];
+  const q = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
+  const out = [cols.join(',')].concat(rows.map(it => cols.map(c => q(c==='decision'?decisions[it.id]:c==='presenters'?(it.presenters||[]).join('; '):c==='score'?it._score.toFixed(1):c==='note'?(notes[it.id]||''):it[c])).join(',')));
+  download('ash2026-my-picks.csv', out.join('\n'), 'text/csv');
+}
+// ---------- tabs / stats ----------
+function switchTab(t){
+  tab = t;
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+  const cal = document.getElementById('cal'), main = document.getElementById('main'), side = document.getElementById('side'), det = document.getElementById('detail');
+  if (t === 'cal'){ cal.style.display = 'block'; main.style.display = side.style.display = det.style.display = 'none'; renderCal(); }
+  else { cal.style.display = 'none'; main.style.display = side.style.display = det.style.display = ''; if (t === 'profile') renderProfile(); else renderDetail(); }
+}
+document.querySelector('.tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) switchTab(b.dataset.tab); });
+function renderStats(){
+  const m = DATA.meta || {};
+  document.getElementById('stats').textContent = `${(m.items||items.length).toLocaleString()} items · ${(m.with_abstract||0).toLocaleString()} abstracts · ${Object.values(decisions).filter(d=>d==='attend').length} attend / ${Object.values(decisions).filter(d=>d==='maybe').length} maybe`;
+}
+function renderAll(){ renderSide(); renderList(); renderStats(); if (tab==='profile') renderProfile(); else renderDetail(); }
+scoreAll(); renderAll();
+</script>
+</body>
+</html>
