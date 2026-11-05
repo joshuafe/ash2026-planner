@@ -1,4 +1,4 @@
-# Publishes the planner with GitHub Pages. Enable it once in the repo: Settings → Pages → Source: "GitHub Actions".
+# Publishes the planner (index.html + data/) with GitHub Pages. Settings → Pages → Source must be "GitHub Actions".
 name: Deploy planner to GitHub Pages
 on:
   push:
@@ -19,8 +19,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Assemble site
+        run: mkdir -p site && cp index.html site/ && cp -r data site/ && touch site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: site
       - id: deployment
         uses: actions/deploy-pages@v4
