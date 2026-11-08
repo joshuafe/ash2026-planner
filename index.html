@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f7f8fb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>ASH 2026 Planner</title>
+<title>Conference Planner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -30,7 +30,11 @@ h1,h2,h3{margin:0;font-weight:500}
 /* ---------- app frame ---------- */
 #top{position:sticky;top:0;z-index:20;background:rgba(247,248,251,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--hair)}
 .topbar{display:flex;align-items:center;gap:10px;padding:10px 16px 6px;max-width:1180px;margin:0 auto}
-.wordmark{font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:-.01em;color:var(--stain-deep)}
+.wordmark{font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:-.01em;color:var(--stain-deep);display:inline-flex;align-items:center;gap:4px;border-radius:10px;padding:2px 6px 2px 0}
+.wordmark svg{opacity:.6}
+.confrow{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;width:100%;padding:12px 14px;border:1px solid var(--hair2);border-radius:14px;background:var(--card)}
+.confrow.on{border-color:var(--stain);background:var(--stain-soft)}
+.confrow b{font-family:var(--serif);font-size:18px;font-weight:600}
 .wordmark small{font-family:var(--sans);font-weight:400;font-size:13px;color:var(--muted);margin-left:6px}
 .topbar .grow{flex:1}
 .iconbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--ink2)}
@@ -243,7 +247,7 @@ label.row input[type=checkbox]{width:22px;height:22px;accent-color:var(--stain);
 </ul></nav>
 <header id="top">
   <div class="topbar">
-    <div class="wordmark">ASH 2026<small id="stats"></small></div>
+    <button class="wordmark" id="confbtn" title="Switch conference"><span id="confname">Planner</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg><small id="stats"></small></button>
     <div class="grow"></div>
     <button class="namebtn" id="who" title="Your name">You</button>
     <button class="iconbtn" id="searchbtn" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
@@ -252,7 +256,7 @@ label.row input[type=checkbox]{width:22px;height:22px;accent-color:var(--stain);
 </header>
 <div id="views">
   <div id="banner" class="hide"></div>
-  <section class="view on" id="v-picks"></section>
+  <section class="view on" id="v-picks"><div class="empty"><b>Loading the program</b>One moment.</div></section>
   <section class="view" id="v-plan"></section>
   <section class="view" id="v-web"></section>
   <section class="view" id="v-me"></section>
@@ -261,11 +265,25 @@ label.row input[type=checkbox]{width:22px;height:22px;accent-color:var(--stain);
 <div id="sheet-back" class="sheet-back hide"></div>
 <div id="sheet" class="sheet"></div>
 <div id="toast"></div>
-<script src="data/core.js"></script>
-<script src="data/abstracts.js"></script>
-<script src="data/graph.js"></script>
+<script src="data/conferences.js"></script>
 <script>
+(function(){
+  const list = window.CONFERENCES || []; const qs = new URLSearchParams(location.search);
+  let id = qs.get('c'); try { id = id || localStorage.getItem('planner.conf'); } catch(e){}
+  const conf = list.find(c => c.id === id) || list[0]; window.CONF = conf;
+  try { localStorage.setItem('planner.conf', conf.id); } catch(e){}
+  document.title = conf.short + ' Planner';
+  const files = ['core.js', 'abstracts.js', 'graph.js']; let n = 0;
+  const done = () => { if (++n === files.length) window.__startPlanner(); };
+  for (const f of files){ const el = document.createElement('script'); el.src = conf.dir + '/' + f; el.async = false; el.onload = done; el.onerror = done; document.head.appendChild(el); }
+})();
+</script>
+<script>
+window.__startPlanner = function(){
 'use strict';
+const CONF = window.CONF;
+const gstore = { get(k, d){ try { const v = localStorage.getItem('planner.'+k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }, set(k, v){ try { localStorage.setItem('planner.'+k, JSON.stringify(v)); } catch(e){} } };
+try { for (const k of ['profile','me','sync','profile_ts','feedMaybe']) if (localStorage.getItem('planner.'+k) === null && localStorage.getItem('ash26.'+k) !== null) localStorage.setItem('planner.'+k, localStorage.getItem('ash26.'+k)); } catch(e){}
 // =====================================================================
 // Data + engine
 // =====================================================================
@@ -274,9 +292,11 @@ const ABS = window.ASH_ABSTRACTS || {};
 const G = window.ASH_GRAPH || null;
 const items = DATA.items;
 const byId = new Map(items.map(i => [i.id, i]));
-const DAYNAMES = {'2026-12-09':['Wed','9'],'2026-12-10':['Thu','10'],'2026-12-11':['Fri','11'],'2026-12-12':['Sat','12'],'2026-12-13':['Sun','13'],'2026-12-14':['Mon','14'],'2026-12-15':['Tue','15'],'2026-12-16':['Wed','16'],'2026-12-17':['Thu','17'],'2026-12-18':['Fri','18']};
-const dayShort = d => DAYNAMES[d] ? DAYNAMES[d][0] + ' ' + DAYNAMES[d][1] : (d||'');
-const dayLong = d => { if (!DAYNAMES[d]) return d||''; const full = {Wed:'Wednesday',Thu:'Thursday',Fri:'Friday',Sat:'Saturday',Sun:'Sunday',Mon:'Monday',Tue:'Tuesday'}; return full[DAYNAMES[d][0]] + ' ' + DAYNAMES[d][1] + ' December'; };
+const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], WDL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'], MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const dparts = d => { const [y,m,dd] = String(d).split('-').map(Number); const dt = new Date(Date.UTC(y, m-1, dd, 12)); return {wd: dt.getUTCDay(), dd, m}; };
+const dayShort = d => { if (!d) return ''; const p = dparts(d); return WD[p.wd] + ' ' + p.dd; };
+const dayLong = d => { if (!d) return ''; const p = dparts(d); return WDL[p.wd] + ' ' + p.dd + ' ' + MON[p.m-1]; };
+const stripLoc = s => (CONF.locStrip && s) ? String(s).replace(CONF.locStrip, '') : (s || '');
 function stripDisclosures(s){ if(!s) return ''; const out=[]; const L=s.split('\n'); for(let i=0;i<L.length;i++){ const l=L[i].trim(); if(/^Disclosures?:/i.test(l)){ i++; continue; } if(/^No relevant conflicts/i.test(l)) continue; if(/ - (Honoraria|Research Funding|Consultancy|Membership on a Board|Current Employment|Speakers Bureau|Current equity|Patents|Other|Stock)/.test(l)) continue; out.push(L[i]); } return out.join('\n'); }
 const toMin = hm => { const [h,m] = hm.split(':').map(Number); return h*60+m; };
 for (const it of items){
@@ -333,14 +353,14 @@ const bundleTerms = i => BUNDLES[i][1].split(/,\s*/);
 const EXAMPLE_PROFILE = { topics: [ {name:BUNDLES[0][0], weight:5, terms:bundleTerms(0)}, {name:BUNDLES[1][0], weight:5, terms:bundleTerms(1)}, {name:BUNDLES[2][0], weight:4, terms:bundleTerms(2)}, {name:BUNDLES[14][0], weight:4, terms:bundleTerms(14)}, {name:BUNDLES[16][0], weight:3, terms:bundleTerms(16)}, {name:BUNDLES[17][0], weight:2, terms:bundleTerms(17)}, {name:BUNDLES[5][0], weight:2, terms:bundleTerms(5)} ], people: [], institutions: [], negatives: [], programWeights: Object.assign({}, PROGRAM_DEFAULTS), graph: {strength:1.0, alpha:0.35, hops:2, muted:[]} };
 const EMPTY_PROFILE = () => ({topics: [], people: [], institutions: [], negatives: [], programWeights: Object.assign({}, PROGRAM_DEFAULTS), graph: {strength:1.0, alpha:0.35, hops:2, muted:[]}});
 // ----- state -----
-const store = { get(k, d){ try { const v = localStorage.getItem('ash26.'+k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }, set(k, v){ try { localStorage.setItem('ash26.'+k, JSON.stringify(v)); } catch(e){} } };
-let profile = store.get('profile', null);
+const store = { get(k, d){ try { const v = localStorage.getItem(CONF.storage+'.'+k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }, set(k, v){ try { localStorage.setItem(CONF.storage+'.'+k, JSON.stringify(v)); } catch(e){} } };
+let profile = gstore.get('profile', null);
 let firstRun = !profile;
 if (!profile) profile = EMPTY_PROFILE();
 if (!profile.graph) profile.graph = {strength:1.0, alpha:0.35, hops:2, muted:[]};
 let decisions = store.get('decisions', {});
 let notes = store.get('notes', {});
-let me = store.get('me', '');
+let me = gstore.get('me', '');
 const F = Object.assign({day:'all', programs:[], types:{session:true, abstract:true, talk:true}, q:'', minScore:0, decision:'all', sort:'score', hidePosters:false}, store.get('filters', {}));
 let limit = 100, view = 'picks', selected = null, shared = null, sharedOnly = false, maxScore = 1, gWeight = null, gSeeds = new Map();
 const isDesk = () => window.matchMedia('(min-width: 900px)').matches;
@@ -397,7 +417,7 @@ function refreshAfterDecision(id){
   const open = document.querySelector('#sheet.on [data-detail]') || document.querySelector('#dpanel [data-detail]');
   if (open){ const oid = open.dataset.detail; if (oid === id || byId.get(oid)?.children?.includes(id)) renderDetailInto(open.parentElement, oid); }
 }
-function rescore(msg){ store.set('profile', profile); profileTs = Date.now(); store.set('profile_ts', profileTs); scheduleSync(); scoreAll(); renderAll(); if (msg) toast(msg); }
+function rescore(msg){ gstore.set('profile', profile); profileTs = Date.now(); gstore.set('profile_ts', profileTs); scheduleSync(); scoreAll(); renderAll(); if (msg) toast(msg); }
 // =====================================================================
 // Views
 // =====================================================================
@@ -409,7 +429,7 @@ function renderSubbar(){
     const dayList = view === 'plan' ? days.filter(d => items.some(i => i.date === d && (decisions[i.id]==='attend' || decisions[i.id]==='maybe'))) : days;
     const cur = view === 'plan' ? (renderPlan.day && dayList.includes(renderPlan.day) ? renderPlan.day : 'all') : F.day;
     sb.classList.remove('hide');
-    sb.innerHTML = `<button class="pill ${cur==='all'?'on':''}" data-day="all">${view==='plan'?'Whole meeting':'All days'}</button>` + dayList.map(d => `<button class="pill ${cur===d?'on':''}" data-day="${d}"><b>${esc(DAYNAMES[d][0])}</b> ${esc(DAYNAMES[d][1])}</button>`).join('');
+    sb.innerHTML = `<button class="pill ${cur==='all'?'on':''}" data-day="all">${view==='plan'?'Whole meeting':'All days'}</button>` + dayList.map(d => `<button class="pill ${cur===d?'on':''}" data-day="${d}"><b>${esc(WD[dparts(d).wd])}</b> ${dparts(d).dd}</button>`).join('');
     sb.onclick = e => { const b = e.target.closest('[data-day]'); if (!b) return; if (view === 'plan'){ renderPlan.day = b.dataset.day; renderSubbar(); renderPlan(); } else { F.day = b.dataset.day; limit = 100; saveF(); renderSubbar(); renderList(true); } };
   } else { sb.classList.add('hide'); sb.innerHTML = ''; }
 }
@@ -457,7 +477,7 @@ function entryHtml(it){
     <div class="when"><span class="day">${esc(dayShort(it.date))}</span>${esc(fmtTime(it.start)).replace(' ','\u202f')}<span class="t2">${esc(fmtTime(it.end)).replace(' ','\u202f')}</span></div>
     <div class="fit" title="fit ${it._score.toFixed(0)}"><i style="--f:${fitOf(it).toFixed(2)}"></i></div>
     <div class="body"><h3>${esc(it.title)}</h3>
-      <p class="meta"><b>${esc(tl)}${it.number ? ' ' + esc(it.number) : ''}</b>${it.program && it.program !== tl ? ', ' + esc(it.program) : ''}${it.location ? ', ' + esc(it.location.replace(/^MCCNO - /, '')) : ''}${who ? '<br>' + esc(who) : ''}${it.cme ? '<br>CME credit' : ''}</p>
+      <p class="meta"><b>${esc(tl)}${it.number ? ' ' + esc(it.number) : ''}</b>${it.program && it.program !== tl ? ', ' + esc(it.program) : ''}${it.location ? ', ' + esc(stripLoc(it.location)) : ''}${who ? '<br>' + esc(who) : ''}${it.cme ? '<br>CME credit' : ''}</p>
       ${(terms.length || rel.length || sh) ? `<div class="chips">${terms.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}${rel.map(t=>`<span class="chip rel">${esc(t)}</span>`).join('')}${sh||''}</div>` : ''}
     </div>
     <button class="quick" data-quick="${it.id}" aria-label="Attend">${STAR}</button></article>`;
@@ -540,7 +560,7 @@ function renderDetailInto(container, id){
     <div class="legend">${esc(typeLabel(it))}${it.number?' '+esc(it.number):''}${it.cme?', CME credit':''}</div>
     <h1 class="d-title">${highlight(it.title)}</h1>
     ${sh||''}
-    <div class="d-when"><span class="k">When</span><span><span class="big">${esc(dayLong(it.date))}</span><br>${esc(fmtRange(it.start, it.end))} Central</span><span class="k">Where</span><span>${esc(it.location||'—')}</span><span class="k">Program</span><span>${esc(it.program||'')}</span>${parent?`<span class="k">Session</span><span><a href="#" data-open="${parent.id}">${esc(parent.title)}</a> <span class="legend">${esc(fmtRange(parent.start,parent.end))}</span></span>`:''}<span class="k">Fit</span><span>${it._score.toFixed(0)}${it._score >= scoreAll.q99 ? ', among the top 1%' : it._score >= scoreAll.q90 ? ', top 10%' : ''}</span></div>
+    <div class="d-when"><span class="k">When</span><span><span class="big">${esc(dayLong(it.date))}</span><br>${esc(fmtRange(it.start, it.end))} ${esc(CONF.tzLabel)}</span><span class="k">Where</span><span>${esc(it.location||'—')}</span><span class="k">Program</span><span>${esc(it.program||'')}</span>${parent?`<span class="k">Session</span><span><a href="#" data-open="${parent.id}">${esc(parent.title)}</a> <span class="legend">${esc(fmtRange(parent.start,parent.end))}</span></span>`:''}<span class="k">Fit</span><span>${it._score.toFixed(0)}${it._score >= scoreAll.q99 ? ', among the top 1%' : it._score >= scoreAll.q90 ? ', top 10%' : ''}</span></div>
     ${!inSheet ? decideHtml(it.id) : ''}
     ${why ? `<div class="d-sec"><h4>Why it fits</h4>${why}</div>` : ''}
     ${parts ? `<div class="d-sec"><h4>People</h4>${parts}</div>` : ''}
@@ -552,7 +572,7 @@ function renderDetailInto(container, id){
     ${kids.length ? `<div class="d-sec"><h4>${kids.length} ${isPoster(it)?'posters':'talks'} in this session</h4>${kids.map(k => `<div class="talk ${decisions[k.id]||''}" data-open="${k.id}"><div class="t">${isPoster(k)?esc(k.number||''):esc(fmtTime(k.start))}</div><div>${esc(k.title)}<div class="s">${esc((k.presenters||[])[0]||'')}, fit ${k._score.toFixed(0)}</div></div><button class="quick" data-quick="${k.id}" aria-label="Attend">${STAR}</button></div>`).join('')}</div>` : ''}
     ${it.keywords?.length ? `<div class="d-sec"><h4>ASH keywords</h4><div class="chips">${it.keywords.map(k=>`<span class="chip tag">${esc(k)}</span>`).join('')}</div></div>` : ''}
     <div class="d-sec"><h4>Your notes</h4><textarea id="note" placeholder="Questions to ask, people to meet, why it matters">${esc(notes[it.id]||'')}</textarea></div>
-    <div class="d-sec rowbtns">${it.ash_url?`<a class="btn sm" href="${esc(it.ash_url)}" target="_blank" rel="noopener">Open on ASH site</a>`:''}${it.ep_url?`<a class="btn sm" href="${esc(it.ep_url)}" target="_blank" rel="noopener">Open in ASH app</a>`:''}</div>
+    <div class="d-sec rowbtns">${it.ash_url?`<a class="btn sm" href="${esc(it.ash_url)}" target="_blank" rel="noopener">Open on ${esc(CONF.short)} site</a>`:''}${it.ep_url?`<a class="btn sm" href="${esc(it.ep_url)}" target="_blank" rel="noopener">Open in ASH app</a>`:''}</div>
   </div>`;
   container.querySelector('#note').addEventListener('input', e => { if (e.target.value.trim()) notes[it.id] = e.target.value; else delete notes[it.id]; store.set('notes', notes); clearTimeout(touch._n); touch._n = setTimeout(() => touch(it.id), 800); });
   if (inSheet){ document.getElementById('dfoot').innerHTML = decideHtml(it.id); document.getElementById('shtitle').textContent = (parent ? 'In: ' + parent.title : (it.session_title || typeLabel(it))).slice(0, 80); container.scrollTop = 0; }
@@ -593,17 +613,17 @@ function renderPlan(){
     for (const e of dayEvs){
       if (prevEnd != null && e._min - prevEnd >= 60) html += `<div class="gap">${Math.floor((e._min - prevEnd)/60)} h free</div>`;
       prevEnd = Math.max(prevEnd ?? 0, e._max);
-      html += `<div class="aitem ${decisions[e.id]==='maybe'?'maybe':''} ${conf.has(e.id)?'conflict':''}" data-ev="${esc(e.id)}"><div class="t"><b>${esc(fmtTime(e.start))}</b>${esc(fmtTime(e.end))}</div><div><h3>${esc(e.title)}${e._posters?` <span class="legend">${e._posters.length} poster${e._posters.length>1?'s':''}</span>`:''}</h3><div class="meta">${esc((e.location||'').replace(/^MCCNO - /,''))}${e.program?', '+esc(e.program):''}${decisions[e.id]==='maybe'?', maybe':''}${conf.has(e.id)?', overlaps':''}</div>${e._posters?`<ul>${e._posters.map(p=>`<li data-ev="${esc(p.id)}">${esc(p.number||'')} ${esc(p.title)}</li>`).join('')}</ul>`:''}</div></div>`;
+      html += `<div class="aitem ${decisions[e.id]==='maybe'?'maybe':''} ${conf.has(e.id)?'conflict':''}" data-ev="${esc(e.id)}"><div class="t"><b>${esc(fmtTime(e.start))}</b>${esc(fmtTime(e.end))}</div><div><h3>${esc(e.title)}${e._posters?` <span class="legend">${e._posters.length} poster${e._posters.length>1?'s':''}</span>`:''}</h3><div class="meta">${esc(stripLoc(e.location))}${e.program?', '+esc(e.program):''}${decisions[e.id]==='maybe'?', maybe':''}${conf.has(e.id)?', overlaps':''}</div>${e._posters?`<ul>${e._posters.map(p=>`<li data-ev="${esc(p.id)}">${esc(p.number||'')} ${esc(p.title)}</li>`).join('')}</ul>`:''}</div></div>`;
     }
   }
   html += `</div>`;
-  const gridDays = showDays.length ? showDays : days.slice(2, 7); const H0 = 7, H1 = 21;
+  const gridDays = showDays.length ? showDays : days; const H0 = 7, H1 = 21;
   html += `<div class="grid" style="--days:${gridDays.length};--hours:${H1-H0}"><div class="dayhead"></div>${gridDays.map(d=>`<div class="dayhead">${esc(dayShort(d))}</div>`).join('')}<div class="gcol">${Array.from({length:H1-H0},(_,i)=>`<div class="hr" style="top:${i*56}px">${fmtTime(String(H0+i).padStart(2,'0')+':00')}</div>`).join('')}</div>`;
   for (const d of gridDays){
     const dayEvs = evs.filter(e => e.date === d).sort((a,b)=>a._min-b._min || b._max-a._max); const cols = []; const placed = [];
     for (const e of dayEvs){ let c = 0; while (cols[c] && cols[c] > e._min) c++; cols[c] = e._max; placed.push({e, c}); }
     for (const p of placed){ const ov = placed.filter(q => overlaps(q.e, p.e)); p.n = Math.max(1, ...ov.map(q=>q.c+1)); }
-    html += `<div class="gcol">${Array.from({length:H1-H0},(_,i)=>`<div class="hr" style="top:${i*56}px"></div>`).join('')}${placed.map(({e,c,n}) => { const top = Math.max(0, (e._min - H0*60)*56/60), h = Math.max(22, (Math.min(e._max, H1*60) - Math.max(e._min, H0*60))*56/60); return `<div class="ev ${decisions[e.id]||'maybe'} ${conf.has(e.id)?'conflict':''}" data-ev="${esc(e.id)}" style="top:${top}px;height:${h-2}px;left:calc(${(100/n)*c}% + 2px);width:calc(${100/n}% - 5px)"><div class="t">${esc(fmtRange(e.start,e.end))}</div><div>${esc(e.title)}</div><div class="loc">${esc((e.location||'').replace(/^MCCNO - /,''))}</div></div>`; }).join('')}</div>`;
+    html += `<div class="gcol">${Array.from({length:H1-H0},(_,i)=>`<div class="hr" style="top:${i*56}px"></div>`).join('')}${placed.map(({e,c,n}) => { const top = Math.max(0, (e._min - H0*60)*56/60), h = Math.max(22, (Math.min(e._max, H1*60) - Math.max(e._min, H0*60))*56/60); return `<div class="ev ${decisions[e.id]||'maybe'} ${conf.has(e.id)?'conflict':''}" data-ev="${esc(e.id)}" style="top:${top}px;height:${h-2}px;left:calc(${(100/n)*c}% + 2px);width:calc(${100/n}% - 5px)"><div class="t">${esc(fmtRange(e.start,e.end))}</div><div>${esc(e.title)}</div><div class="loc">${esc(stripLoc(e.location))}</div></div>`; }).join('')}</div>`;
   }
   html += `</div>`;
   v.innerHTML = html;
@@ -614,7 +634,7 @@ function renderPlan(){
 }
 function openCalendarSheet(){
   openSheet(`<div class="sh-head"><h2>Add to your calendar</h2><button class="btn sm quiet" data-close>Done</button></div><div class="sh-body stack">
-    <p>Download a calendar file with your picks, then open it in your calendar app. Times are set in Central time, so they shift correctly if your phone is in another zone.</p>
+    <p>Download a calendar file with your picks, then open it in your calendar app. Times are set in ${esc(CONF.tzLabel)} time, so they shift correctly if your phone is in another zone.</p>
     <div class="rowbtns"><button class="btn primary" id="icsA">Attend only</button><button class="btn" id="icsAM">Attend and maybe</button></div>
     ${sync ? `<div><b>Prefer a feed that updates itself?</b><div class="legend">Your live feed link is under Me. Subscribe to it once and your calendar follows your picks.</div></div>` : ''}
     <div><b>Outlook</b><div class="legend">On the web: Add calendar, then Upload from file. On desktop: File, Open &amp; Export, Import/Export, Import an iCalendar (.ics) file, then choose Import to merge into your calendar.</div></div>
@@ -628,12 +648,19 @@ function openCalendarSheet(){
 const icsEsc = s => String(s||'').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/[,;]/g, m => '\\'+m);
 const fold = line => { const out = []; let s = line; while (s.length > 72){ out.push(s.slice(0, 72)); s = ' ' + s.slice(72); } out.push(s); return out.join('\r\n'); };
 const icsLocal = (date, hm) => date.replace(/-/g,'') + 'T' + hm.replace(':','') + '00';
-function exportIcs(includeMaybe){
+const VTZ = {
+  'America/Chicago': ['BEGIN:VTIMEZONE','TZID:America/Chicago','BEGIN:STANDARD','DTSTART:19701101T020000','RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU','TZOFFSETFROM:-0500','TZOFFSETTO:-0600','TZNAME:CST','END:STANDARD','BEGIN:DAYLIGHT','DTSTART:19700308T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU','TZOFFSETFROM:-0600','TZOFFSETTO:-0500','TZNAME:CDT','END:DAYLIGHT','END:VTIMEZONE'],
+  'America/New_York': ['BEGIN:VTIMEZONE','TZID:America/New_York','BEGIN:STANDARD','DTSTART:19701101T020000','RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU','TZOFFSETFROM:-0400','TZOFFSETTO:-0500','TZNAME:EST','END:STANDARD','BEGIN:DAYLIGHT','DTSTART:19700308T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU','TZOFFSETFROM:-0500','TZOFFSETTO:-0400','TZNAME:EDT','END:DAYLIGHT','END:VTIMEZONE'],
+  'America/Denver': ['BEGIN:VTIMEZONE','TZID:America/Denver','BEGIN:STANDARD','DTSTART:19701101T020000','RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU','TZOFFSETFROM:-0600','TZOFFSETTO:-0700','TZNAME:MST','END:STANDARD','BEGIN:DAYLIGHT','DTSTART:19700308T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU','TZOFFSETFROM:-0700','TZOFFSETTO:-0600','TZNAME:MDT','END:DAYLIGHT','END:VTIMEZONE'],
+  'America/Los_Angeles': ['BEGIN:VTIMEZONE','TZID:America/Los_Angeles','BEGIN:STANDARD','DTSTART:19701101T020000','RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU','TZOFFSETFROM:-0700','TZOFFSETTO:-0800','TZNAME:PST','END:STANDARD','BEGIN:DAYLIGHT','DTSTART:19700308T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU','TZOFFSETFROM:-0800','TZOFFSETTO:-0700','TZNAME:PDT','END:DAYLIGHT','END:VTIMEZONE'],
+  'Pacific/Honolulu': ['BEGIN:VTIMEZONE','TZID:Pacific/Honolulu','BEGIN:STANDARD','DTSTART:19700101T000000','TZOFFSETFROM:-1000','TZOFFSETTO:-1000','TZNAME:HST','END:STANDARD','END:VTIMEZONE']
+};
+function exportIcs(includeMaybe){ const txt = buildIcs(includeMaybe); if (!txt){ toast('Nothing marked yet'); return; } download(CONF.id + '-' + (me ? me.replace(/\W+/g,'-').toLowerCase() + '-' : '') + 'plan.ics', txt, 'text/calendar;charset=utf-8'); toast('Calendar file downloaded'); }
+function buildIcs(includeMaybe){
   const evs = calendarEvents(includeMaybe).filter(e => e.date && e.start && e.end);
-  if (!evs.length){ toast('Nothing marked yet'); return; }
+  if (!evs.length) return '';
   const stamp = new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
-  const L = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//ASH 2026 Planner//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:ASH 2026 ' + (me ? me + "'s" : 'my') + ' picks','X-WR-TIMEZONE:America/Chicago',
-    'BEGIN:VTIMEZONE','TZID:America/Chicago','BEGIN:STANDARD','DTSTART:19701101T020000','RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU','TZOFFSETFROM:-0500','TZOFFSETTO:-0600','TZNAME:CST','END:STANDARD','BEGIN:DAYLIGHT','DTSTART:19700308T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU','TZOFFSETFROM:-0600','TZOFFSETTO:-0500','TZNAME:CDT','END:DAYLIGHT','END:VTIMEZONE'];
+  const L = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Conference Planner//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:' + CONF.short + ' ' + (me ? me + "'s" : 'my') + ' picks','X-WR-TIMEZONE:' + CONF.tz, ...(VTZ[CONF.tz] || VTZ['America/Chicago'])];
   for (const e of evs){
     const d = decisions[e.id] === 'maybe' ? 'Maybe: ' : '';
     let desc = [e.program, e.session_title ? 'Session: ' + e.session_title : '', (e.presenters||[]).length ? 'Presenters: ' + e.presenters.slice(0,8).join(', ') : ''].filter(Boolean).join('\n');
@@ -641,12 +668,11 @@ function exportIcs(includeMaybe){
     if (e.abstract) desc += '\n\n' + e.abstract.slice(0, 500) + (e.abstract.length > 500 ? '…' : '');
     if (notes[e.id]) desc += '\n\nNotes: ' + notes[e.id];
     if (e.ash_url) desc += '\n' + e.ash_url;
-    L.push('BEGIN:VEVENT', `UID:ash2026-${e.id}@planner`, `DTSTAMP:${stamp}`, `SEQUENCE:${Math.floor(Date.now()/60000) % 100000}`, `DTSTART;TZID=America/Chicago:${icsLocal(e.date, e.start)}`, `DTEND;TZID=America/Chicago:${icsLocal(e.date, e.end)}`,
+    L.push('BEGIN:VEVENT', `UID:${CONF.id}-${e.id}@planner`, `DTSTAMP:${stamp}`, `SEQUENCE:${Math.floor(Date.now()/60000) % 100000}`, `DTSTART;TZID=${CONF.tz}:${icsLocal(e.date, e.start)}`, `DTEND;TZID=${CONF.tz}:${icsLocal(e.date, e.end)}`,
       `SUMMARY:${icsEsc(d + (e.number && !e._isGroup ? e.number + ' ' : '') + e.title)}`, `LOCATION:${icsEsc(e.location||'')}`, `DESCRIPTION:${icsEsc(desc)}`, e.ash_url ? `URL:${e.ash_url}` : '', 'TRANSP:OPAQUE', 'END:VEVENT');
   }
   L.push('END:VCALENDAR');
-  download('ash2026-' + (me ? me.replace(/\W+/g,'-').toLowerCase() + '-' : '') + 'plan.ics', L.filter(Boolean).map(fold).join('\r\n'), 'text/calendar;charset=utf-8');
-  toast('Calendar file downloaded');
+  return L.filter(Boolean).map(fold).join('\r\n');
 }
 // ---------- Keyword web ----------
 let webSel = null, webNodes = [], webEdges = [], webAnim = null, webQuery = '', mapOn = false;
@@ -786,18 +812,18 @@ function renderMe(){
       <div class="section-h" style="padding-left:0;font-size:19px">Share and back up</div>
       <div class="rowbtns"><button class="btn" id="share">Share my picks</button><button class="btn" id="backup">Back up</button><button class="btn" id="restore">Restore</button><input type="file" id="restorefile" accept="application/json" class="hide"></div>
       <p class="legend">A share link carries your attend and maybe picks plus your interests. Whoever opens it sees them alongside their own, which stay untouched. Back up saves everything to a file you can restore on another device.</p>
-      <p class="legend">${(DATA.meta.items||0).toLocaleString()} entries and ${(DATA.meta.with_abstract||0).toLocaleString()} abstracts from the ASH online program and the meeting app, built ${esc((DATA.meta.generated||'').slice(0,10))}.</p>
+      <p class="legend">${esc(CONF.name)}: ${(DATA.meta.items||0).toLocaleString()} entries, ${(DATA.meta.with_abstract||0).toLocaleString()} with abstract text, built ${esc((DATA.meta.generated||'').slice(0,10))}. Your interests, name and sync code are shared across conferences; picks and notes are kept per conference.</p>
     </div></div>`;
   v.querySelector('#setname').addEventListener('click', askName);
   v.querySelector('#wiz').addEventListener('click', openWizard);
   v.querySelector('#share').addEventListener('click', makeShareLink);
   v.querySelector('#backup').addEventListener('click', () => download('ash2026-planner-backup.json', JSON.stringify({profile, decisions, notes, me, exported:new Date().toISOString()}, null, 1), 'application/json'));
   v.querySelector('#restore').addEventListener('click', () => v.querySelector('#restorefile').click());
-  v.querySelector('#restorefile').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; f.text().then(t => { try { const j = JSON.parse(t); if (j.profile) profile = j.profile; if (!profile.graph) profile.graph = {strength:1, alpha:.35, hops:2, muted:[]}; if (j.decisions) decisions = j.decisions; if (j.notes) notes = j.notes; if (j.me){ me = j.me; store.set('me', me); } store.set('decisions', decisions); store.set('notes', notes); firstRun = false; rescore('Restored'); } catch(err){ toast('That file could not be read'); } }); });
+  v.querySelector('#restorefile').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; f.text().then(t => { try { const j = JSON.parse(t); if (j.profile) profile = j.profile; if (!profile.graph) profile.graph = {strength:1, alpha:.35, hops:2, muted:[]}; if (j.decisions) decisions = j.decisions; if (j.notes) notes = j.notes; if (j.me){ me = j.me; gstore.set('me', me); } store.set('decisions', decisions); store.set('notes', notes); firstRun = false; rescore('Restored'); } catch(err){ toast('That file could not be read'); } }); });
   bindSyncSection(v);
   renderEditor();
 }
-function askName(){ const vv = prompt('Your name (used in share links and the calendar file):', me || ''); if (vv !== null){ me = vv.trim(); store.set('me', me); renderWho(); if (view==='me') renderMe(); } }
+function askName(){ const vv = prompt('Your name (used in share links and the calendar file):', me || ''); if (vv !== null){ me = vv.trim(); gstore.set('me', me); renderWho(); if (view==='me') renderMe(); } }
 function renderEditor(){
   const el = document.getElementById('editor'); if (!el) return; const t = profile, g = t.graph;
   el.innerHTML = `<div id="topics">${t.topics.map((tp,i)=>`<div class="topic" data-i="${i}"><div class="head"><input type="checkbox" data-en ${tp.enabled===false?'':'checked'} title="On"><input type="text" data-name value="${esc(tp.name)}" placeholder="Topic"><select data-w>${[1,2,3,4,5].map(w=>`<option ${(+tp.weight||1)===w?'selected':''} value="${w}">×${w}</option>`).join('')}</select><button class="btn sm danger" data-del="${i}">Remove</button></div><textarea data-terms placeholder="terms, one per line or comma-separated">${esc((tp.terms||[]).join('\n'))}</textarea></div>`).join('')}</div>
@@ -840,7 +866,7 @@ function openWizard(){
   const body = document.getElementById('wbody'), foot = document.getElementById('wfoot');
   const draw = () => {
     body.innerHTML = `
-      <h2>What do you care about at ASH?</h2>
+      <h2>What do you care about at ${esc(CONF.short)}?</h2>
       <p class="legend">Pick areas and set how much each matters. Then describe your work in a few sentences and the planner finds matching keywords across every abstract. You can refine everything later.</p>
       <div style="margin:8px 0 18px"><div class="legend" style="margin-bottom:4px">Your name</div><input type="text" id="wname" value="${esc(nameText)}" placeholder="Shown in share links and calendar files" autocomplete="name"></div>
       <div id="bundles">${BUNDLES.map((b, i) => `<div class="bundle"><label class="row" style="border:0;padding:0;flex:1"><input type="checkbox" data-b="${i}" ${picked.has(i)?'checked':''}><span class="nm">${esc(b[0])}<small>${esc(b[1].split(/,\s*/).slice(0,5).join(', '))}…</small></span></label><div class="step ${picked.has(i)?'':'hide'}"><button data-dec="${i}" type="button">−</button><span>×${picked.get(i)||3}</span><button data-inc="${i}" type="button">+</button></div></div>`).join('')}</div>
@@ -848,10 +874,10 @@ function openWizard(){
       <div class="found" id="wfound">${extracted.map(([id,on]) => `<button data-kw="${id}" class="${on?'on':''}" type="button">${esc(gLabel[id])}</button>`).join('')}</div>${extracted.length?'<div class="legend">Tap to toggle. Selected keywords become a weighted topic of their own.</div>':''}</div>`;
     foot.innerHTML = `<div class="rowbtns"><button class="btn primary" id="wbuild" style="flex:1">Build my web</button>${!profile.topics.length ? '<button class="btn" id="wexample">Use the example</button>' : ''}</div>`;
     foot.querySelector('#wbuild').addEventListener('click', build);
-    const ex = foot.querySelector('#wexample'); if (ex) ex.addEventListener('click', () => { profile = JSON.parse(JSON.stringify(EXAMPLE_PROFILE)); const nm = body.querySelector('#wname').value.trim(); if (nm){ me = nm; store.set('me', me); renderWho(); } firstRun = false; closeSheet(); rescore('Example profile loaded'); switchView('web'); });
+    const ex = foot.querySelector('#wexample'); if (ex) ex.addEventListener('click', () => { profile = JSON.parse(JSON.stringify(EXAMPLE_PROFILE)); const nm = body.querySelector('#wname').value.trim(); if (nm){ me = nm; gstore.set('me', me); renderWho(); } firstRun = false; closeSheet(); rescore('Example profile loaded'); switchView('web'); });
   };
   const build = () => {
-    const nm = body.querySelector('#wname').value.trim(); if (nm !== me){ me = nm; store.set('me', me); renderWho(); }
+    const nm = body.querySelector('#wname').value.trim(); if (nm !== me){ me = nm; gstore.set('me', me); renderWho(); }
     const keep = profile.topics.filter(t => !BUNDLES.some(b => b[0] === t.name) && t.name !== 'From my description');
     const topics = [...picked.entries()].map(([i, w]) => ({name: BUNDLES[i][0], weight: w, terms: bundleTerms(i)}));
     const chosen = extracted.filter(([,on]) => on).map(([id]) => gLabel[id]);
@@ -876,8 +902,8 @@ async function compress(str){ const bytes = new TextEncoder().encode(str); if (!
 async function decompress(s){ const bytes = b64u.dec(s.slice(1)); if (s[0] === 'r') return new TextDecoder().decode(bytes); const ds = new DecompressionStream('deflate-raw'); const w = ds.writable.getWriter(); w.write(bytes); w.close(); return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer()); }
 async function makeShareLink(){
   if (!me){ askName(); if (!me) return; }
-  const payload = {n: me, a: Object.keys(decisions).filter(k => decisions[k]==='attend' && byId.has(k)), m: Object.keys(decisions).filter(k => decisions[k]==='maybe' && byId.has(k)), p: profile};
-  const url = location.href.split('#')[0] + '#share=' + await compress(JSON.stringify(payload));
+  const payload = {c: CONF.id, n: me, a: Object.keys(decisions).filter(k => decisions[k]==='attend' && byId.has(k)), m: Object.keys(decisions).filter(k => decisions[k]==='maybe' && byId.has(k)), p: profile};
+  const url = location.origin + location.pathname + '?c=' + CONF.id + '#share=' + await compress(JSON.stringify(payload));
   if (navigator.share && !isDesk()){ try { await navigator.share({title:'My ASH 2026 picks', url}); return; } catch(e){} }
   try { await navigator.clipboard.writeText(url); toast('Link copied. Whoever opens it keeps their own picks.'); } catch(e){ prompt('Copy this link:', url); }
 }
@@ -885,6 +911,7 @@ async function loadShare(){
   const m = location.hash.match(/#share=([^&]+)/); if (!m) return;
   try {
     const p = JSON.parse(await decompress(m[1]));
+    if (p.c && p.c !== CONF.id && (window.CONFERENCES||[]).some(c => c.id === p.c)){ location.replace(location.pathname + '?c=' + p.c + location.hash); return; }
     shared = {name: p.n || 'A friend', attend: new Set(p.a||[]), maybe: new Set(p.m||[]), profile: p.p || null};
     const b = document.getElementById('banner'); b.className = 'banner';
     b.innerHTML = `<span><b>${esc(shared.name)}</b> shared ${shared.attend.size} attend and ${shared.maybe.size} maybe picks${shared.profile?' and their interests':''}. Yours stay as they are.</span>
@@ -898,13 +925,13 @@ async function loadShare(){
 }
 // ---------- Sync across devices + live calendar feed (Supabase edge functions, optional) ----------
 const SYNC_BASE = 'https://fecggoxvaupuorlcoboq.supabase.co/functions/v1';
-let sync = store.get('sync', null);           // {key, feed_token, last}
+let sync = gstore.get('sync', null);           // {key, feed_token, last}
 let ts = store.get('ts', {});                 // per-entry change times
-let profileTs = store.get('profile_ts', 0);
+let profileTs = gstore.get('profile_ts', 0);
 let syncTimer = null, syncing = false, syncError = '';
 function touch(id){ ts[id] = Date.now(); store.set('ts', ts); scheduleSync(); }
 function scheduleSync(){ if (!sync) return; clearTimeout(syncTimer); syncTimer = setTimeout(() => doSync().catch(e => { syncError = String(e.message||e); renderSyncStatus(); }), 2500); }
-function evFields(it){ const p = it.parent_id ? byId.get(it.parent_id) : null; return {t: it.title, date: it.date, s: it.start, e: it.end, loc: it.location, prog: it.program, num: it.number, sess: it.session_title, pres: (it.presenters||[]).slice(0,3), url: it.ash_url, pid: it.parent_id, pt: p ? p.title : undefined, ps: p ? p.start : undefined, pe: p ? p.end : undefined, poster: isPoster(it), abs: it.abstract ? it.abstract.slice(0, 300) : undefined}; }
+function evFields(it){ const p = it.parent_id ? byId.get(it.parent_id) : null; return {conf: CONF.id, tz: CONF.tz, t: it.title, date: it.date, s: it.start, e: it.end, loc: it.location, prog: it.program, num: it.number, sess: it.session_title, pres: (it.presenters||[]).slice(0,3), url: it.ash_url, pid: it.parent_id, pt: p ? p.title : undefined, ps: p ? p.start : undefined, pe: p ? p.end : undefined, poster: isPoster(it), abs: it.abstract ? it.abstract.slice(0, 300) : undefined}; }
 function buildPicks(){ const out = {}; for (const id of new Set([...Object.keys(decisions), ...Object.keys(notes), ...Object.keys(ts)])){ const it = byId.get(id); if (!it) continue; out[id] = {d: decisions[id] || null, n: notes[id] || '', ts: ts[id] || 0, ev: evFields(it)}; } return out; }
 async function doSync(opts){
   opts = opts || {}; if (!opts.create && !opts.key && !sync) return;
@@ -916,11 +943,11 @@ async function doSync(opts){
     const r = await fetch(SYNC_BASE + '/sync', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
     j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error === 'unknown code' ? 'That code is not recognised' : (j.error || ('server ' + r.status)));
   } catch(e){ syncing = false; syncError = String(e.message||e); renderSyncStatus(); throw e; }
-  sync = {key: j.key, feed_token: j.feed_token, last: Date.now()}; store.set('sync', sync);
+  sync = {key: j.key, feed_token: j.feed_token, last: Date.now()}; gstore.set('sync', sync);
   let changed = false, rescoreNeeded = false;
   for (const [id, p] of Object.entries(j.picks || {})){ if (!byId.has(id) || !p) continue; if ((p.ts||0) > (ts[id]||0)){ ts[id] = p.ts; if (p.d) decisions[id] = p.d; else delete decisions[id]; if (p.n) notes[id] = p.n; else delete notes[id]; changed = true; } }
-  if ((j.profile_ts||0) > profileTs && j.profile){ profile = j.profile; if (!profile.graph) profile.graph = {strength:1, alpha:.35, hops:2, muted:[]}; profileTs = j.profile_ts; store.set('profile', profile); store.set('profile_ts', profileTs); changed = true; rescoreNeeded = true; firstRun = false; }
-  if (j.name && !me){ me = j.name; store.set('me', me); renderWho(); }
+  if ((j.profile_ts||0) > profileTs && j.profile){ profile = j.profile; if (!profile.graph) profile.graph = {strength:1, alpha:.35, hops:2, muted:[]}; profileTs = j.profile_ts; gstore.set('profile', profile); gstore.set('profile_ts', profileTs); changed = true; rescoreNeeded = true; firstRun = false; }
+  if (j.name && !me){ me = j.name; gstore.set('me', me); renderWho(); }
   store.set('decisions', decisions); store.set('notes', notes); store.set('ts', ts);
   syncing = false;
   if (changed){ if (rescoreNeeded) scoreAll(); renderAll(); } else renderSyncStatus();
@@ -932,7 +959,7 @@ function renderSyncStatus(){ const el = document.getElementById('syncstatus'); i
 function syncSectionHtml(){
   if (!sync) return `<div class="section-h" style="padding-left:0;font-size:19px">Sync across devices<small>Optional. A sync code links your phone and laptop and powers a live calendar feed. Without it, everything stays in this browser.</small></div>
     <div class="rowbtns"><button class="btn primary" id="syncCreate">Create a sync code</button><button class="btn" id="syncEnter">I have a code</button></div><div class="legend" id="syncstatus"></div>`;
-  const withMaybe = store.get('feedMaybe', true);
+  const withMaybe = gstore.get('feedMaybe', true);
   return `<div class="section-h" style="padding-left:0;font-size:19px">Synced<small>Enter this code on your other devices. Anyone who has it can read and change these picks, so keep it to yourself.</small></div>
     <div class="rowbtns"><span class="badge" style="font-size:16px;padding:6px 12px;font-variant-numeric:tabular-nums">${esc(sync.key)}</span><button class="btn sm" id="syncCopy">Copy code</button><button class="btn sm" id="syncNow">Sync now</button><button class="btn sm danger" id="syncUnlink">Unlink this device</button></div>
     <div class="legend" id="syncstatus"></div>
@@ -947,13 +974,18 @@ function bindSyncSection(v){
   on('#syncEnter', async () => { const k = (prompt('Enter your sync code (like ABCD-EFGH-JKLM):', '') || '').trim().toUpperCase(); if (!k) return; try { await doSync({key:k}); toast('Linked. Your picks from both devices are merged.'); renderMe(); } catch(e){ toast(e.message || 'Could not link'); } });
   on('#syncCopy', () => copyText(sync.key, 'Sync code copied'));
   on('#syncNow', () => doSync().then(() => toast('Synced')).catch(e => toast(e.message || 'Sync failed')));
-  on('#syncUnlink', () => { if (!confirm('Unlink this device? Your picks stay here; the account stays on the server for your other devices.')) return; sync = null; store.set('sync', null); renderMe(); });
-  on('#feedCopy', () => copyText(feedUrl(store.get('feedMaybe', true)), 'Feed link copied'));
-  const fm = v.querySelector('#feedMaybe'); if (fm) fm.addEventListener('change', e => { store.set('feedMaybe', e.target.checked); const a = v.querySelector('#feedOpen'); if (a) a.href = feedUrl(e.target.checked); });
+  on('#syncUnlink', () => { if (!confirm('Unlink this device? Your picks stay here; the account stays on the server for your other devices.')) return; sync = null; gstore.set('sync', null); renderMe(); });
+  on('#feedCopy', () => copyText(feedUrl(gstore.get('feedMaybe', true)), 'Feed link copied'));
+  const fm = v.querySelector('#feedMaybe'); if (fm) fm.addEventListener('change', e => { gstore.set('feedMaybe', e.target.checked); const a = v.querySelector('#feedOpen'); if (a) a.href = feedUrl(e.target.checked); });
   renderSyncStatus();
 }
 // ---------- boot ----------
-function renderWho(){ document.getElementById('who').textContent = me || 'You'; }
+function renderWho(){ document.getElementById('who').textContent = me || 'You'; document.getElementById('confname').textContent = CONF.short; }
+function openConfSheet(){
+  openSheet(`<div class="sh-head"><h2>Conferences</h2><button class="btn sm quiet" data-close>Done</button></div><div class="sh-body stack">${(window.CONFERENCES||[]).map(c => `<button class="confrow ${c.id===CONF.id?'on':''}" data-conf="${esc(c.id)}"><b>${esc(c.short)}</b><span>${esc(c.name)}</span><span class="legend">${esc(c.when)}, ${esc(c.venue)}</span></button>`).join('')}<p class="legend">Your interests, name and sync code carry over; picks and notes stay with each conference.</p></div>`, true);
+  sheetEl.querySelector('.sh-body').addEventListener('click', e => { const b = e.target.closest('[data-conf]'); if (!b) return; if (b.dataset.conf === CONF.id){ closeSheet(); return; } gstore.set('conf', b.dataset.conf); try { localStorage.setItem('planner.conf', b.dataset.conf); } catch(err){} location.href = location.pathname + '?c=' + b.dataset.conf; });
+}
+document.getElementById('confbtn').addEventListener('click', openConfSheet);
 function renderStats(){ const n = Object.values(decisions).filter(d=>d==='attend').length + Object.values(decisions).filter(d=>d==='maybe').length; const c = document.getElementById('navcount'); c.textContent = n; c.classList.toggle('hide', !n); document.getElementById('stats').textContent = profile.topics.length ? '' : 'no interests yet'; }
 function renderAll(){ renderWho(); renderStats(); renderSubbar(); if (view==='picks') renderPicks(); if (view==='plan') renderPlan(); if (view==='web') renderWeb(); if (view==='me') renderMe(); }
 document.getElementById('who').addEventListener('click', askName);
@@ -962,6 +994,10 @@ window.addEventListener('resize', () => { if (view === 'web') drawMap(); });
 scoreAll(); renderAll(); loadShare().then(() => { if (firstRun && !shared) setTimeout(openWizard, 400); });
 if (sync) doSync().catch(e => console.warn('sync', e));
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && sync) doSync().catch(() => {}); });
+// debug handle (used by automated checks)
+window.P = {CONF, items, byId, days, programs, GN, EXAMPLE_PROFILE, gstore, store, setDecision, exportIcs, buildIcs, doSync, feedUrl, openConfSheet, closeSheet, scoreAll, renderAll, switchView, dayShort, fmtRange, openWizard,
+  get profile(){ return profile; }, set profile(v){ profile = v; }, get lastVisible(){ return lastVisible; }, get sync(){ return sync; }, get gSeeds(){ return gSeeds; }, get firstRun(){ return firstRun; }, set firstRun(v){ firstRun = v; }, get sheetOpen(){ return sheetOpen; }, get decisions(){ return decisions; }, clearSyncTimer(){ clearTimeout(syncTimer); }};
+};
 </script>
 </body>
 </html>

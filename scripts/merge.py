@@ -4,7 +4,7 @@ Outputs: ash2026_program.json, ash2026_program.csv, data/core.js, data/abstracts
 """
 import re, os, sys, json, html, csv, datetime
 API, ASH, DEST = sys.argv[1], sys.argv[2], sys.argv[3]
-os.makedirs(os.path.join(DEST, 'data'), exist_ok=True)
+DEST = os.path.join(DEST, 'data', 'ash2026'); os.makedirs(DEST, exist_ok=True)
 
 def xml_json(path):
     t = open(path, encoding='utf-8').read()
@@ -124,11 +124,11 @@ meta = {'generated': datetime.datetime.now().isoformat(timespec='seconds'), 'ite
         'by_type': {t: sum(1 for x in order if x['type'] == t) for t in ('session', 'abstract', 'talk')},
         'with_abstract': sum(1 for x in order if x['abstract']), 'cme_sessions': sum(1 for x in order if x['cme'] and x['type'] == 'session'),
         'sources': ['https://eppro02.ativ.me/web/index.php?project=ASH26', 'https://onlineprogram.hematology.org/']}
-json.dump({'meta': meta, 'items': order}, open(os.path.join(DEST, 'ash2026_program.json'), 'w'), ensure_ascii=False, indent=0)
+json.dump({'meta': meta, 'items': order}, open(os.path.join(DEST, 'program.json'), 'w'), ensure_ascii=False, indent=0)
 
 cols = ['id', 'type', 'program', 'ep_category', 'date', 'start', 'end', 'location', 'number', 'title', 'session_title', 'cme',
         'presenters', 'participants', 'authors', 'keywords', 'description', 'abstract', 'ep_description', 'ash_url', 'ep_url']
-with open(os.path.join(DEST, 'ash2026_program.csv'), 'w', newline='', encoding='utf-8') as f:
+with open(os.path.join(DEST, 'program.csv'), 'w', newline='', encoding='utf-8') as f:
     w = csv.writer(f); w.writerow(cols)
     for it in order:
         row = dict(it)
@@ -147,9 +147,9 @@ def slim(it):
     if it['participants'] or it['authors']: c.pop('ep_speakers', None)
     return c
 core = [slim(it) for it in order]
-with open(os.path.join(DEST, 'data', 'core.js'), 'w', encoding='utf-8') as f:
+with open(os.path.join(DEST, 'core.js'), 'w', encoding='utf-8') as f:
     f.write('window.ASH_DATA=' + json.dumps({'meta': meta, 'items': core}, ensure_ascii=False, separators=(',', ':')) + ';\n')
-with open(os.path.join(DEST, 'data', 'abstracts.js'), 'w', encoding='utf-8') as f:
+with open(os.path.join(DEST, 'abstracts.js'), 'w', encoding='utf-8') as f:
     def heavy_of(it):
         d = {k: it[k] for k in heavy if it[k] and k != 'disclosures'}
         if it['abstract'] or it['description']: d.pop('ep_description', None)   # app text is redundant once ASH text exists

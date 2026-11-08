@@ -12,6 +12,7 @@ patients patient study studies results result methods method background conclusi
 indicating suggesting suggest revealed reveal reveals whereas together collected collect enhanced enhance enhances following impact impacts large small samples sample notably interestingly importantly consistent consistently markedly robust strongly approximately remained exhibited exhibit displayed display confirmed confirm validated validate measured measure detected detect obtained obtain achieved achieve achieving resulted resulting led contributed contribute highlights highlight underscore underscores warrant warrants warranted ongoing future limited lack absence presence within across along toward towards yet thus therefore hence moreover furthermore additionally finally taken collectively represents represent representing critical key role roles effect effects effective efficacy safety profile profiles setting settings population populations subgroup subgroups arm arms dose doses enrolled enrollment eligible eligibility endpoint endpoints evaluable analyzed analysed assessed estimated estimate estimates calculated calculate tested test tests testing considered consider considering noted note notes seen see showing known unknown possible possibly likely unlikely able unable allow allows allowing enable enables enabling leading lead leads due owing because since until without whereas while thereby wherein hereby per-protocol intention-to-treat months-old weeks-old
 occurred status reduced reduction common commonly activity improved improve improvement criteria followed developed develop development characteristics standard death deaths independent independently grade grades burden combined combination plus sensitivity specificity negative positive cycles cycle regimen regimens initiated initiation continued continue discontinued discontinuation completed completion administered administration received receipt duration frequency frequent incidence prevalence percent proportion majority minority subset subsets cohort-wide upon versus whereby wherein thereof overall-survival progression-free event-free rate-of n-of defined-as according accordingly addition additionally apparent apparently appear appears appeared approximately around average below above nearly roughly respective similar similarly significance significant signficantly statistically substantial substantially
 excluded exclude excluding poor pts pt iqr center centers human humans elevated system systems stage stages highly classified classify management managed subsequent subsequently type types experienced experience against durable inferior superior validation validated target targets targeting protein proteins mechanism mechanisms alone either/or whom hence onset nature cause causes caused cumulative favorable unfavorable worse better best worst good bad real actual actually true truly false unclear clear clearly
+have has had having does did done been being get gets got make makes made take takes taken come comes came go goes went put puts set sets keep keeps kept let lets say says said tell tells told ask asks asked seem seems seemed become becomes became leave leaves left look looks looked bring brings brought begin begins began start starts started
 abstract introduction summary table figure fig vs. e.g i.e et al n= p= p< p> hr= or= ci= ci: 95% 95 ci""".split())
 DOMAIN_KEEP = set()  # placeholder for exceptions
 
@@ -48,7 +49,8 @@ for it in items:
     doc_body[it['id']] = (bt[1] | bt[2] | bt[3]) | doc_title[it['id']]
     for g in doc_body[it['id']]: df[g] += 1
 
-MIN = {1: 25, 2: 12, 3: 8}; MAXDF = {1: 0.10 * N, 2: 0.22 * N, 3: 0.22 * N}
+scale = max(0.12, min(1.0, N / 8000))   # smaller corpora need lower document-frequency floors
+MIN = {1: max(3, round(25 * scale)), 2: max(3, round(12 * scale)), 3: max(2, round(8 * scale))}; MAXDF = {1: 0.10 * N, 2: 0.22 * N, 3: 0.22 * N}
 cand = {g: c for g, c in df.items() if c >= MIN[g.count(' ') + 1] and c <= MAXDF[g.count(' ') + 1]}
 # prune shorter grams absorbed by a longer gram with nearly the same DF
 by_len = sorted(cand, key=lambda g: -g.count(' '))
@@ -63,7 +65,7 @@ drop = set()
 for g, c in cand.items():
     for u in longer_index.get(g, []):
         if u in cand and cand[u] >= 0.8 * c: drop.add(g); break
-vocab = sorted((g for g in cand if g not in drop), key=lambda g: -cand[g])[:4000]
+vocab = sorted((g for g in cand if g not in drop), key=lambda g: -cand[g])[:4000 if N > 2000 else 1500]
 tid = {g: i for i, g in enumerate(vocab)}
 terms = [{'id': i, 'label': g, 'kind': 'term', 'df': cand[g]} for g, i in tid.items()]
 
@@ -72,7 +74,7 @@ kw_df = collections.Counter()
 for it in items:
     for k in set(it.get('keywords') or []): kw_df[k] += 1
 for k, c in kw_df.most_common():
-    if c >= 3:
+    if c >= (3 if N > 2000 else 2):
         i = len(terms); terms.append({'id': i, 'label': k, 'kind': 'taxonomy', 'df': c}); tid['\x00' + k] = i
 
 item_terms = {}
@@ -91,7 +93,7 @@ for it in items:
     for a, b in itertools.combinations(sorted(ts), 2): co[(a, b)] += 1
 edges_by = collections.defaultdict(list)
 for (a, b), c in co.items():
-    if c < 4: continue
+    if c < max(2, round(4 * scale)): continue
     pab = c / N; pa = tf[a] / N; pb = tf[b] / N
     pmi = math.log(pab / (pa * pb)); npmi = pmi / (-math.log(pab))
     if npmi < 0.12: continue
@@ -103,9 +105,10 @@ for a, lst in edges_by.items():
     for w, b, c in lst[:15]: keep.add((min(a, b), max(a, b)))
 edges = [[a, b, round(max(x[0] for x in edges_by[a] if x[1] == b), 3)] for a, b in sorted(keep)]
 
-os.makedirs(os.path.join(DEST, 'data'), exist_ok=True)
+outpath = DEST if DEST.endswith('.js') else os.path.join(DEST, 'data', 'graph.js')
+os.makedirs(os.path.dirname(outpath), exist_ok=True)
 graph = {'terms': terms, 'items': item_terms, 'edges': edges, 'n_items': N}
-with open(os.path.join(DEST, 'data', 'graph.js'), 'w', encoding='utf-8') as f:
+with open(outpath, 'w', encoding='utf-8') as f:
     f.write('window.ASH_GRAPH=' + json.dumps(graph, ensure_ascii=False, separators=(',', ':')) + ';\n')
 print(f'items {N}, vocab terms {len(vocab)} (+{len(terms)-len(vocab)} taxonomy), edges {len(edges)}, avg terms/item {sum(len(a)+len(b) for a,b in item_terms.values())/N:.1f}')
 print('top terms:', [t['label'] for t in terms[:40]])

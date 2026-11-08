@@ -1,7 +1,13 @@
-# ASH 2026 program extract + planner
+# Conference planner: ASH 2026 and Tandem 2027
 
-Personal planning tool for the ASH 2026 Annual Meeting (New Orleans, Dec 9–18, 2026; times are Central).
-Open `index.html` in a browser, or publish the folder with GitHub Pages and share the URL.
+Personal planning tool for hematology meetings. Two conferences are loaded so far, switchable from the title in the top bar (or `?c=ash2026` / `?c=tandem2027` in the URL):
+
+| conference | dates and place | what is in | data folder |
+|---|---|---|---|
+| ASH 2026 Annual Meeting | December 12–15, 2026, Morial Convention Center, New Orleans (Central time) | 7,996 entries: 765 sessions, 6,374 abstracts with full text, 857 talks | `data/ash2026/` |
+| 2027 Tandem Meetings (ASTCT and CIBMTR) | February 16–20, 2027, Orlando World Center Marriott (Eastern time) | 555 entries: 220 sessions with tracks, rooms and chairs, 335 talks with speakers; abstracts not yet released | `data/tandem2027/` |
+
+Interests, name and sync code are shared across conferences; picks and notes are kept per conference. Live at https://joshuafe.github.io/ash2026-planner/ (first load of ASH is about 50 MB; Tandem is under 1 MB).
 
 ## The planner (`index.html`)
 Phone-first, works offline from the folder or from GitHub Pages. Four tabs:
@@ -23,9 +29,9 @@ Backend pieces: `supabase/migrations/20261104_create_accounts.sql` (one `account
 A term scores when it appears in a title (3), ASH keywords (2), session title (1.5), abstract (1–2 by frequency) or description (1); per topic the sum is capped and multiplied by the topic weight. The keyword web adds `6·ln(1 + s/4)` where `s` sums propagated keyword weights (title hits count double, broad keywords are down-weighted). The total is scaled by the program weight; people (+8) and institutions (+3) add bonuses; excluded terms subtract 8. A session also inherits 60% of the mean of its three best talks.
 
 ## Data files
-- `ash2026_program.json` — one record per item (sessions, abstracts, talks) with `children` lists.
-- `ash2026_program.csv` — flat spreadsheet version.
-- `data/core.js`, `data/abstracts.js`, `data/graph.js` — what the app loads.
+- `data/<conference>/program.json` — one record per item (sessions, abstracts, talks) with `children` lists.
+- `data/<conference>/program.csv` — flat spreadsheet version.
+- `data/<conference>/core.js`, `abstracts.js`, `graph.js` — what the app loads; `data/conferences.js` lists the conferences (name, dates, venue, time zone, folder).
 
 | field | meaning |
 |---|---|
@@ -37,8 +43,12 @@ A term scores when it appears in a title (3), ASH keywords (2), session title (1
 | `abstract`, `affiliations`, `keywords`, `cme` | from the ASH online program |
 
 ## Rebuilding (`scripts/`)
+### ASH 2026
 1. `fetch_eventpilot.sh <dir>` — EventPilot API (`eppro02.ativ.me`): agenda + speakers.
 2. `scrape_ash.py <cache> <agenda_raw.json>` then `scrape_papers.py <cache> <ids.txt> <workers>` — `onlineprogram.hematology.org` session and paper pages (slow site, 2–7 s per page).
-3. `parse_ash.py <cache> <parsed>` → `merge.py <eventpilot_dir> <parsed> <this folder>` → `build_graph.py ash2026_program.json <this folder>`.
+3. `parse_ash.py <cache> <parsed>` → `merge.py <eventpilot_dir> <parsed> <this folder>` (writes `data/ash2026/`) → `build_graph.py data/ash2026/program.json data/ash2026/graph.js`.
 
 Abstract text exists only on the ASH online program; the app never exposes it.
+
+### Tandem 2027
+The program is served by the public tandemmeetings.org site from its m-events program API (event 605): session records, presentations and faculty. Raw JSON was captured from the site in a browser session and saved under an API dump folder; `tandem_build.py <api_dir> data/tandem2027` turns it into the planner schema and `build_graph.py data/tandem2027/program.json data/tandem2027/graph.js` builds the keyword web. Abstracts are not published yet; when they are, the same steps add their text to the talks.
